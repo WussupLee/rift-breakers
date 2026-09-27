@@ -14,7 +14,7 @@ The third-party art and sound listed in this table are **CC0 1.0**. License reco
 | audio/ui.ogg | Kenney | https://kenney.nl/assets/interface-sounds | licenses/interface-sounds.txt |
 | planet.png | Kenney | https://kenney.nl/assets/planets | licenses/planets.txt |
 
-Portraits are transparent crops of idle sprites. Original colors are retained. Directional attacks retime and reuse the supplied attack sequences with gameplay-specific arcs and movement; the packs do not contain 11 unique directional sequences. Omen maps attack3 to Attack1. Names and game design are original. Music and fallback sounds are synthesized by the game. CMYK interface and combat effects are procedural original artwork.
+Portraits are transparent crops of idle sprites. Original colors are retained. Directional attacks retime and reuse the supplied attack sequences with gameplay-specific arcs and movement; the packs do not contain 11 unique directional sequences. Omen maps attack3 to Attack1. Names and game design are original. All runtime audio now uses recorded files. The five legacy OGG effects above remain as unused original assets; the replacement effects and full cue mapping are documented in [audio/SOUND-DESIGN.md](audio/SOUND-DESIGN.md). New sources include Kenney RPG Audio, HaelDB/AuraVoice grunts, and Dvideoguy/jessepash crowd recordings (CC0). The exact Midnight Loop music is reused at the owner’s request; the owner reports a royalty-free beat and will provide attribution/license details later. The music is not claimed to be CC0. CMYK interface and combat effects are procedural original artwork.
 
 ## Original generated scenery (not third-party CC0 downloads)
 

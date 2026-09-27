@@ -1,0 +1,5 @@
+.sound-check{border-top:1px solid #ffffff20;padding-top:20px;display:grid;gap:12px}
+.sound-check h3{font-size:18px;font-weight:900;letter-spacing:.08em}
+.sound-check select{width:100%;min-height:44px;background:#111827;color:#fff;border:1px solid #ffffff40;border-radius:8px;padding:8px;font-size:16px}
+.sound-check-actions{display:flex;flex-wrap:wrap;gap:8px}
+.sound-check a{color:#5fe5e8;font-size:13px;text-decoration:underline}

@@ -51,7 +51,7 @@ Set `QA_URL` to test a deployed URL. Append `?debug` to expose the simulation br
 - `game/simulation.ts`: seeded 60 Hz combat simulation, collision, AI, match scoring.
 - `game/input.ts`: keyboard and multitouch; transitions retained between fixed steps.
 - `game/scene.ts`: interpolated Phaser presentation, sprite mapping, effects and camera.
-- `game/audio.ts`: CC0 samples plus original synthesized music/effect fallback.
+- `game/audio.ts` / `game/audio-catalog.ts`: recorded-only mixer and 35 logical cues, quiet movement/voices, rate-limited crowds, music ducking and pause/resume. No synthesized fallback. See [the full sound guide](public/assets/audio/SOUND-DESIGN.md) for source credits, levels and the separate Midnight Loop music rights record. Settings → Sound Check auditions every cue.
 - `app/page.tsx`: character/rules/stage setup, handheld controls, pause, settings, credits and results.
 - `tests/`: combat, geometry, recovery, scoring and deterministic fixtures.
 

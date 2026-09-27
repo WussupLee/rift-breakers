@@ -11,3 +11,14 @@ for(const name of ['background','platform','shuttle']){
 }
 assert(fs.existsSync('public/assets/station/ART-NOTES.md'));
 console.log('Validated three station textures, transparent sprites, walking edge, size budgets, and provenance.');
+
+const {createHash}=await import('node:crypto');
+const audio=JSON.parse(fs.readFileSync('public/assets/audio/manifest.json','utf8'));
+for(const s of [...audio.samples,audio.music]){
+ const bytes=fs.readFileSync('public/assets/audio/'+s.file);
+ assert.equal(createHash('sha256').update(bytes).digest('hex'),s.sha256,'Audio asset hash: '+s.file);
+ assert(s.duration>0&&Number.isFinite(s.peakDb));
+ if(s.sourceSha256){assert(s.peakDb<=-4.5);assert(audio.sources[s.source].license.includes('CC0'));}
+}
+assert(fs.existsSync('public/assets/audio/SOUND-DESIGN.md'));
+console.log('Validated recorded audio hashes, measured levels, source records and music provenance.');
