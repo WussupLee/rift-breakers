@@ -5,6 +5,6 @@ if(process.env.GITHUB_ACTIONS){
  await visit(root);
 }
 const html=await fs.readFile(path.join(root,'index.html'),'utf8');
-if(!html.includes('Choose your')||!html.includes('RIFT'))throw new Error('Static export is missing the game entry screen');
+if(!html.includes('selection-screen')||!html.includes('RIFT'))throw new Error('Static export is missing the game entry screen');
 await fs.writeFile(path.join(root,'.nojekyll'),'');
 console.log('Static entry page verified; GitHub Pages assets prepared.');
