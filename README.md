@@ -12,6 +12,7 @@ Four CC0 pixel fighters, one floating arena, and a CMYK interdimensional handhel
 - H: pick up, use or throw an item. S: fast fall. Down+jump drops through the upper platform.
 - Esc: pause. F3: developer hitbox overlay.
 - Phone: enlarged D-pad, B light, A heavy, X jump, Y dodge on the right, Z item. START pauses. Menus and matches stay inside a responsive device frame; the selection platform previews each fighter's idle animation.
+- Mobile play surface: native non-passive gesture guards and explicit descendant selection/callout suppression keep long holds and multitouch in the game. The visible viewport reserves control space; mobile setup uses Fighters / Match / Teams pages instead of scrolling. Pause fills the device frame. Help/settings dialogs remain separate readable panels; browser chrome and OS accessibility gestures remain browser/OS-controlled.
 - Three jumps total, one rising recovery, directional influence, wall contact recovery and increasing damage-to-knockback.
 - Settings persist on the device: audio, controls, touch size/opacity, shake, flashes and high-contrast labels.
 
@@ -41,6 +42,7 @@ Browser verification:
 pnpm exec playwright install chromium
 node scripts/browser-qa.mjs
 node --import tsx scripts/ai-soak.ts
+node scripts/gesture-qa.mjs
 ```
 Set `QA_URL` to test a deployed URL. Append `?debug` to expose the simulation bridge used by browser tests. F3 works without that flag.
 

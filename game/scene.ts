@@ -54,5 +54,5 @@ export function launchGame(parent:HTMLElement,config:MatchConfig,bridge:GameBrid
    this.debugText.setVisible(bridge.debug);if(bridge.debug)this.debugText.setText([`60 Hz | tick ${sim.tick} | ${Math.round(1000/this.frameAvg)} FPS`,...sim.actors.map(a=>`${a.id} ${a.move?.id??(a.stun?'stun':'idle')} ${a.moveTick} J${a.airJumps} R${!a.recoveryUsed} D${a.dodgeCD} ${a.aiIntent}`)]);
   }
  }
- return new Phaser.Game({type:Phaser.AUTO,parent,backgroundColor:'#0b1021',pixelArt:true,roundPixels:false,antialias:false,scale:{mode:Phaser.Scale.RESIZE,width:parent.clientWidth,height:parent.clientHeight},scene:ArenaScene,audio:{noAudio:true},render:{powerPreference:'high-performance'},fps:{target:60,smoothStep:false},banner:false});
+ return new Phaser.Game({type:Phaser.AUTO,parent,backgroundColor:'#0b1021',pixelArt:true,roundPixels:false,antialias:false,scale:{mode:Phaser.Scale.RESIZE,width:Math.max(160,parent.clientWidth),height:Math.max(120,parent.clientHeight),min:{width:160,height:120}},scene:ArenaScene,audio:{noAudio:true},render:{powerPreference:'high-performance'},fps:{target:60,smoothStep:false},banner:false});
 }
