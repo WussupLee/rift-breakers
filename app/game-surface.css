@@ -1,4 +1,12 @@
 /* The play surface is an input device, not selectable document content. */
+.feel-settings{padding-bottom:16px;border-bottom:1px solid #39465c}
+.feel-settings p{margin:12px 0}
+.feel-settings [data-slot=switch]{position:relative;display:flex;align-items:center;width:64px;min-width:64px;height:44px;padding:0 6px;border-radius:24px;background:#283750;border:1px solid #60728c}
+.feel-settings [data-slot=switch][data-state=checked]{background:#197781;border-color:#50dee6}
+.feel-settings [data-slot=switch-thumb]{display:block;width:28px;height:28px;border-radius:50%;background:#eef6fc;transform:translateX(0)}
+.feel-settings [data-slot=switch-thumb][data-state=checked]{transform:translateX(22px)}
+.feel-settings [data-slot=switch]:disabled,.feel-settings button:disabled{opacity:.45;cursor:not-allowed}
+.game-dialog [data-slot=dialog-close]{width:44px;height:44px;display:grid;place-items:center;top:6px;right:6px}
 /* Arena selection uses the same art and proportions as the live stage. */
 .station-preview .station-preview-sky{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
 .station-preview .station-preview-platform{position:absolute;height:auto;image-rendering:pixelated;z-index:1}

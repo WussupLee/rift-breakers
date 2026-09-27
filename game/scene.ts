@@ -1,5 +1,7 @@
 import * as Phaser from 'phaser';
 import {SpaceStation} from './environment';
+import {FEEL,resolveFeel,scaledDelta,FIXED_STEP_MS} from './feel';
+import {frameFighters,easeCamera,type CameraState} from './camera';
 import {FIGHTERS,STAGE,fighter,asset,damageColor,ITEMS,type Settings,type MatchConfig,type Animation} from './data';
 import {Simulation,type Actor,type CombatEvent} from './simulation';import {InputController} from './input';import {GameAudio} from './audio';
 type Atlas={width:number;height:number;frames:number;bounds:{x:number;y:number;w:number;h:number}};
@@ -7,17 +9,18 @@ type Manifest=Record<string,Record<string,Atlas>>;
 export interface GameBridge {sim:Simulation|null;input:InputController|null;paused:boolean;debug:boolean;settings:Settings;onUpdate:(sim:Simulation)=>void;onReady:()=>void;onError:(message:string)=>void;onPause:()=>void;audio:GameAudio|null}
 export function launchGame(parent:HTMLElement,config:MatchConfig,bridge:GameBridge){
  class ArenaScene extends Phaser.Scene {
-  sim!:Simulation;acc=0;manifest!:Manifest;sprites:Phaser.GameObjects.Sprite[]=[];labels:Phaser.GameObjects.Text[]=[];gfx!:Phaser.GameObjects.Graphics;fx!:Phaser.GameObjects.Graphics;station!:SpaceStation;debugText!:Phaser.GameObjects.Text;particles:{x:number;y:number;vx:number;vy:number;life:number;max:number;size:number;color:number}[]=[];rings:{x:number;y:number;life:number;max:number;color:number;size:number}[]=[];zoomFactor=1;frameAvg=16;lastEmit=-1;lastHeld:number|null=null;
+  sim!:Simulation;acc=0;manifest!:Manifest;sprites:Phaser.GameObjects.Sprite[]=[];labels:Phaser.GameObjects.Text[]=[];gfx!:Phaser.GameObjects.Graphics;fx!:Phaser.GameObjects.Graphics;station!:SpaceStation;debugText!:Phaser.GameObjects.Text;particles:{x:number;y:number;vx:number;vy:number;life:number;max:number;size:number;color:number}[]=[];rings:{x:number;y:number;life:number;max:number;color:number;size:number}[]=[];cameraState:CameraState={x:500,y:470,zoom:0};cameraWidth=0;cameraHeight=0;touchDevice=false;timeScale=1;frameAvg=16;lastEmit=-1;lastHeld:number|null=null;
   constructor(){super('Arena');}
   preload(){SpaceStation.preload(this);this.load.json('manifest',asset('manifest.json'));this.load.once('filecomplete-json-manifest',(_k:string,_t:string,data:Manifest)=>{this.manifest=data;for(const f of FIGHTERS)for(const [anim,meta] of Object.entries(data[f.id]))this.load.spritesheet(`${f.id}-${anim}`,asset(`fighters/${f.id}/${anim}.png`),{frameWidth:meta.width,frameHeight:meta.height});});this.load.on('loaderror',()=>bridge.onError('A game asset could not load. Check your connection and retry.'));}
-  create(){this.sim=new Simulation(config);bridge.sim=this.sim;bridge.input=new InputController(bridge.settings,()=>bridge.onPause(),()=>{bridge.debug=!bridge.debug;});bridge.audio=new GameAudio(bridge.settings);void bridge.audio.start();bridge.input.onGesture=()=>{void bridge.audio?.start();};this.station=new SpaceStation(this);this.gfx=this.add.graphics();this.fx=this.add.graphics().setDepth(20);this.debugText=this.add.text(10,10,'',{fontFamily:'monospace',fontSize:'13px',color:'#ffffff',backgroundColor:'#000c'}).setScrollFactor(0).setDepth(100);
+  create(){this.touchDevice=window.matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0;this.sim=new Simulation({...config,feel:resolveFeel(bridge.settings.gameFeel,this.touchDevice)});bridge.sim=this.sim;bridge.input=new InputController(bridge.settings,()=>bridge.onPause(),()=>{bridge.debug=!bridge.debug;});bridge.audio=new GameAudio(bridge.settings);void bridge.audio.start();bridge.input.onGesture=()=>{void bridge.audio?.start();};this.station=new SpaceStation(this);this.gfx=this.add.graphics();this.fx=this.add.graphics().setDepth(20);this.debugText=this.add.text(10,10,'',{fontFamily:'monospace',fontSize:'13px',color:'#ffffff',backgroundColor:'#000c'}).setScrollFactor(0).setDepth(100);
    for(const a of this.sim.actors){const def=fighter(a.slot.fighter);this.sprites.push(this.add.sprite(a.x,a.y,`${def.id}-idle`).setDepth(5));this.labels.push(this.add.text(0,0,a.id===0?'▼ YOU':`CPU ${a.id}`,{fontFamily:'monospace',fontSize:'13px',fontStyle:'bold',color:def.color}).setOrigin(.5,1).setDepth(8));}
    bridge.onReady();bridge.onUpdate(this.sim);
    if(new URLSearchParams(location.search).has('debug')){(window as unknown as {rift:unknown}).rift={simulation:this.sim,bridge,scene:this};}
   }
   update(_time:number,delta:number){if(!this.sim)return;this.frameAvg=this.frameAvg*.95+delta*.05;if(bridge.input)bridge.input.settings=bridge.settings;if(bridge.audio)bridge.audio.settings=bridge.settings;
-   if(!bridge.paused&&!this.sim.ended){this.acc+=Math.min(delta,100);let steps=0;while(this.acc>=1000/60&&steps++<6){this.sim.step(bridge.input?.sample());for(const e of this.sim.events)this.effect(e);this.acc-=1000/60;}bridge.audio?.music(this.sim.tick);if(this.sim.tick%6===0||this.sim.ended||this.lastHeld!==this.sim.actors[0].held){this.lastHeld=this.sim.actors[0].held;bridge.onUpdate(this.sim);}}else this.acc=0;
-   this.renderWorld(Math.min(1,this.acc/(1000/60)),bridge.paused?0:Math.min(delta/16.67,3));
+   const feel=resolveFeel(bridge.settings.gameFeel,this.touchDevice);this.timeScale=FEEL[feel].speed;this.sim.config.feel=feel;this.tweens.timeScale=this.timeScale;
+   if(!bridge.paused&&!this.sim.ended){this.acc+=scaledDelta(delta,feel);let steps=0;while(this.acc>=FIXED_STEP_MS&&steps++<6){this.sim.step(bridge.input?.sample());for(const e of this.sim.events)this.effect(e);this.acc-=FIXED_STEP_MS;}bridge.audio?.music(this.sim.tick);if(this.sim.tick%6===0||this.sim.ended||this.lastHeld!==this.sim.actors[0].held){this.lastHeld=this.sim.actors[0].held;bridge.onUpdate(this.sim);}}else this.acc=0;
+   this.renderWorld(Math.min(1,this.acc/(FIXED_STEP_MS)),bridge.paused?0:Math.min(delta/16.67,3)*this.timeScale);
   }
   effect(e:CombatEvent){if(e.kind==='ko'){const view=this.cameras.main.worldView;e={...e,x:Phaser.Math.Clamp(e.x,view.left+60,view.right-60),y:Phaser.Math.Clamp(e.y,view.top+100,view.bottom-60)};const id=this.sim.actors[e.actor].slot.fighter;const ghost=this.add.sprite(e.x,e.y,`${id}-death`).setScale(1.3).setTintFill(0xffffff).setDepth(19);this.tweens.addCounter({from:0,to:this.manifest[id].death.frames-1,duration:400,onUpdate:t=>{ghost.setFrame(Math.floor(t.getValue()??0));ghost.setAlpha(1-t.progress);},onComplete:()=>ghost.destroy()});}const col=Phaser.Display.Color.HexStringToColor(e.kind==='hit'?damageColor(this.sim.actors[e.actor].damage):e.color).color;
    if(['hit','ko','jump','dodge','item','respawn'].includes(e.kind))bridge.audio?.play(e.kind,e.power);
@@ -27,9 +30,13 @@ export function launchGame(parent:HTMLElement,config:MatchConfig,bridge:GameBrid
    if(e.kind==='ko'){if(bridge.settings.shake)this.cameras.main.shake(220,.006);if(bridge.settings.flashes)this.cameras.main.flash(100,40,220,235,false);}
    else if(e.kind==='hit'&&e.power>13&&bridge.settings.shake)this.cameras.main.shake(85,.0025);
   }
-  renderWorld(alpha:number,dt:number){const sim=this.sim,g=this.gfx,fx=this.fx;g.clear();fx.clear();const alive=sim.actors.filter(a=>!a.out&&!a.respawn);const minX=Math.min(250,...alive.map(a=>a.x)),maxX=Math.max(750,...alive.map(a=>a.x));const desired=Phaser.Math.Clamp(950/(maxX-minX+260),.8,1.12);if(!bridge.paused)this.zoomFactor+=(desired-this.zoomFactor)*.035;
-   const cam=this.cameras.main;const base=Math.min(this.scale.width/1000,this.scale.height/720);cam.setZoom(base*this.zoomFactor);cam.centerOn(500,470);
-   this.station.draw(sim.tick+(bridge.paused?0:alpha),cam.zoom,this.scale.width,this.scale.height);
+  renderWorld(alpha:number,dt:number){const sim=this.sim,g=this.gfx,fx=this.fx;g.clear();fx.clear();
+   const cam=this.cameras.main,width=this.scale.width,height=this.scale.height;
+   const target=frameFighters(sim.actors,width,height);
+   if(this.cameraWidth!==width||this.cameraHeight!==height){this.cameraState=target;this.cameraWidth=width;this.cameraHeight=height;}
+   else if(!bridge.paused)this.cameraState=easeCamera(this.cameraState,target,dt*16.67);
+   cam.setZoom(this.cameraState.zoom);cam.centerOn(this.cameraState.x,this.cameraState.y);
+   this.station.draw(sim.tick+(bridge.paused?0:alpha),cam.zoom,this.scale.width,this.scale.height,this.cameraState.x,this.cameraState.y);
    for(const a of sim.actors){const sprite=this.sprites[a.id],label=this.labels[a.id],def=fighter(a.slot.fighter);if(a.out||a.respawn){sprite.setVisible(false);label.setVisible(false);continue;}sprite.setVisible(true);label.setVisible(true);const x=a.px+(a.x-a.px)*alpha,y=a.py+(a.y-a.py)*alpha;
     let anim:Animation=a.stun>0?'hurt':a.move?a.move.animation:!a.grounded?(a.vy<0?'jump':'fall'):Math.abs(a.vx)>.8?'run':'idle';if(a.dodgeTime>0)anim='jump';const meta=this.manifest[def.id][anim],idle=this.manifest[def.id].idle;const scale=def.id==='omen'?1.15:def.id==='kairo'?1.6:def.id==='regent'?1.4:1.55;
     const baseline=def.id==='kairo'?(anim==='jump'||anim==='fall'?95:81):def.id==='regent'?104:def.id==='vexa'?96:166;

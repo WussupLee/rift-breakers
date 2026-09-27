@@ -1,3 +1,4 @@
+import {FEEL} from './feel';
 import {fighter,STAGE,ITEMS,emptyInput,type InputFrame,type MatchConfig,type MoveDefinition,type MoveId,type Slot,type ItemKind} from './data';
 export interface CombatEvent {kind:'hit'|'ko'|'jump'|'dodge'|'land'|'attack'|'respawn'|'item'|'sudden';x:number;y:number;color:string;power:number;actor:number}
 export interface Actor {id:number;slot:Slot;x:number;y:number;px:number;py:number;vx:number;vy:number;face:number;damage:number;stocks:number;score:number;kos:number;deaths:number;grounded:boolean;platform:number;airJumps:number;recoveryUsed:boolean;dodgeCD:number;dodgeTime:number;dodgeAge:number;spot:boolean;stun:number;freeze:number;invulnerable:number;respawn:number;out:boolean;move:MoveDefinition|null;moveTick:number;hit:Set<number>;previous:InputFrame;buffers:Record<string,number>;coyote:number;drop:number;lastAttacker:number;lastHit:number;history:MoveId[];aiInput:InputFrame;aiNext:number;aiIntent:string;held:number|null;wall:number;wallUses:number;charge:number;diApplied:boolean;damageDone:number;landing:number}
@@ -30,13 +31,13 @@ export class Simulation {
   if(this.config.mode==='timed'&&!this.sudden&&--this.time<=0)this.resolveTime();
   if(this.config.mode==='stock'||this.sudden)this.checkVictory();
  }
- stepActor(a:Actor,input:InputFrame){a.px=a.x;a.py=a.y;if(a.out)return;if(a.respawn>0){if(--a.respawn===0){a.x=STAGE.spawns[a.id];a.y=230;a.px=a.x;a.py=a.y;a.vx=0;a.vy=0;a.invulnerable=120;a.airJumps=2;a.recoveryUsed=false;a.dodgeCD=0;a.grounded=false;a.wallUses=0;this.emit('respawn',a);}return;}
-  for(const k of ['jump','light','heavy','dodge','item'] as const){if(input[k]&&!a.previous[k])a.buffers[k]=6;else a.buffers[k]=Math.max(0,(a.buffers[k]||0)-1);}a.previous={...input};
+ stepActor(a:Actor,input:InputFrame){const feel=FEEL[this.config.feel??'classic'];a.px=a.x;a.py=a.y;if(a.out)return;if(a.respawn>0){if(--a.respawn===0){a.x=STAGE.spawns[a.id];a.y=230;a.px=a.x;a.py=a.y;a.vx=0;a.vy=0;a.invulnerable=120;a.airJumps=2;a.recoveryUsed=false;a.dodgeCD=0;a.grounded=false;a.wallUses=0;this.emit('respawn',a);}return;}
+  for(const k of ['jump','light','heavy','dodge','item'] as const){if(input[k]&&!a.previous[k])a.buffers[k]=feel.buffer;else a.buffers[k]=Math.max(0,(a.buffers[k]||0)-1);}a.previous={...input};
   if(a.invulnerable>0)a.invulnerable--;if(a.dodgeCD>0)a.dodgeCD--;if(a.drop>0)a.drop--;if(a.landing>0)a.landing--;a.dodgeAge++;
   if(a.stun>0&&!a.diApplied&&(input.x||input.y)){const angle=Math.atan2(a.vy,a.vx),cross=Math.cos(angle)*input.y-Math.sin(angle)*input.x;const next=angle+Math.max(-1,Math.min(1,cross))*Math.PI/10;const speed=Math.hypot(a.vx,a.vy);a.vx=Math.cos(next)*speed;a.vy=Math.sin(next)*speed;a.diApplied=true;}
   if(a.freeze>0){a.freeze--;return;}
   if(a.stun>0){a.stun--;a.move=null;a.vx*=.985;}
-  const def=fighter(a.slot.fighter);if(a.grounded)a.coyote=5;else a.coyote=Math.max(0,a.coyote-1);
+  const def=fighter(a.slot.fighter);if(a.grounded)a.coyote=feel.coyote;else a.coyote=Math.max(0,a.coyote-1);
   if(a.dodgeTime>0){a.dodgeTime--;a.vx*=.91;a.vy*=.91;}
   if(a.move){if(a.move.charge&&a.moveTick===a.move.startup-1&&input.heavy&&a.charge<30)a.charge++;else a.moveTick++;
    if(a.moveTick===a.move.startup){this.emit('attack',a,a.move.damage);if(a.move.id==='rec'){a.vy=-15.8;if(a.slot.fighter==='omen'){a.x+=input.x*55;a.y-=48;this.emit('dodge',a,2);}a.vx+=input.x*4;}if(a.move.id==='gp'){a.vy=15;a.vx*=.5;}}
@@ -52,8 +53,8 @@ export class Simulation {
     if(key!=='rec'||!a.recoveryUsed){a.move=def.moves[key];a.moveTick=0;a.charge=0;a.hit.clear();a.buffers.light=0;a.buffers.heavy=0;a.dodgeTime=0;if(input.x)a.face=Math.sign(input.x);if(key==='rec')a.recoveryUsed=true;if(gravityCancel){a.vy=0;a.vx*=.3;}if(a.move.impulse)a.vx=a.face*a.move.impulse;if(a.invulnerable>0)a.invulnerable=0;}
    }
   }
-  if(a.stun<=0&&!a.dodgeTime){if(!a.move){const target=input.x*def.speed;const accel=a.grounded?def.acceleration:def.acceleration*.55;a.vx+=Math.max(-accel,Math.min(accel,target-a.vx));if(input.x)a.face=Math.sign(input.x);}else a.vx*=a.grounded?.84:.985;}
-  if(!a.grounded&&!a.dodgeTime){a.vy+=def.gravity*(input.y>0&&a.vy>0&&a.stun<=0?1.9:1);a.vy=Math.min(a.vy,a.stun>0?30:input.y>0?18:13);}
+  if(a.stun<=0&&!a.dodgeTime){if(!a.move){const target=input.x*def.speed;const accel=a.grounded?def.acceleration:def.acceleration*.55*feel.airControl;a.vx+=Math.max(-accel,Math.min(accel,target-a.vx));if(input.x)a.face=Math.sign(input.x);}else a.vx*=a.grounded?.84:.985;}
+  if(!a.grounded&&!a.dodgeTime){const assisted=a.stun<=0&&a.move?.id!=='gp',fast=input.y>0&&a.vy>0&&a.stun<=0;a.vy+=def.gravity*(assisted&&!fast?feel.gravity:1)*(fast?1.9:1);a.vy=Math.min(a.vy,a.stun>0?30:input.y>0?18:assisted?feel.fallSpeed:13);}
   a.x+=a.vx;a.y+=a.vy;a.grounded=false;a.wall=0;
   for(let i=0;i<STAGE.platforms.length;i++){const p=STAGE.platforms[i],r=def.width/2;if(i===1&&a.drop>0)continue;
    if(a.x+r>p.x&&a.x-r<p.x+p.width&&a.vy>=0&&a.py<=p.y+2&&a.y>=p.y){a.y=p.y;a.vy=0;a.grounded=true;a.platform=i;a.airJumps=2;a.recoveryUsed=false;a.wallUses=0;if(a.py<p.y-3){a.dodgeCD=Math.min(a.dodgeCD,45);a.landing=6;this.emit('land',a);}if(a.move?.id==='gp'){a.moveTick=Math.max(a.moveTick,a.move.startup);}}

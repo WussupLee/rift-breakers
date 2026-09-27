@@ -19,12 +19,12 @@ export class SpaceStation {
     this.platforms=STAGE.platforms.map((p,i)=>scene.add.image(p.x,p.y,'station-platform').setOrigin(0,0).setDisplaySize(p.width,i?34:96).setDepth(-2));
     this.lights=scene.add.graphics().setDepth(-1);
   }
-  draw(tick:number,zoom:number,width:number,height:number){
+  draw(tick:number,zoom:number,width:number,height:number,centerX=500,centerY=470){
     // Screen-cover framing keeps the moons visible in portrait and landscape.
     // Inverse zoom gives the distant scenery less camera motion than the deck.
     const size=Math.max(width,height)/zoom;
-    const left=500-size/2,top=470-height/(2*zoom);
-    this.background.setPosition(500,top+size/2).setDisplaySize(size,size);
+    const left=centerX-size/2,top=centerY-height/(2*zoom);
+    this.background.setPosition(centerX,top+size/2).setDisplaySize(size,size);
     const g=this.atmosphere;g.clear();
     const time=this.motion.matches?0:tick/60;
     this.ships.forEach((ship,i)=>{

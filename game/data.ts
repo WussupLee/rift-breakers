@@ -1,3 +1,4 @@
+import type {FeelMode,FeelPreference} from './feel';
 export type FighterId = 'kairo' | 'regent' | 'vexa' | 'omen';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export type MoveId = 'nl'|'sl'|'dl'|'nh'|'sh'|'dh'|'na'|'sa'|'da'|'rec'|'gp';
@@ -25,14 +26,14 @@ export const FIGHTERS:FighterDefinition[]=[
 ];
 export const fighter=(id:FighterId)=>FIGHTERS.find(f=>f.id===id)!;
 export interface Slot { fighter:FighterId; difficulty:Difficulty; team:number }
-export interface MatchConfig { mode:'stock'|'timed'; stocks:number; seconds:number; teams:boolean; friendlyFire:boolean; slots:Slot[]; items:'off'|'low'|'normal'; seed:number }
+export interface MatchConfig { feel?:FeelMode; mode:'stock'|'timed'; stocks:number; seconds:number; teams:boolean; friendlyFire:boolean; slots:Slot[]; items:'off'|'low'|'normal'; seed:number }
 export const defaultConfig:MatchConfig={mode:'stock',stocks:3,seconds:240,teams:false,friendlyFire:false,slots:[{fighter:'kairo',difficulty:'medium',team:0},{fighter:'vexa',difficulty:'medium',team:1}],items:'low',seed:743};
 export interface StageDefinition { platforms:{x:number;y:number;width:number;oneWay:boolean}[]; blast:{left:number;right:number;top:number;bottom:number}; spawns:number[] }
 export const STAGE:StageDefinition={platforms:[{x:160,y:610,width:680,oneWay:false},{x:380,y:425,width:240,oneWay:true}],blast:{left:-180,right:1180,top:-200,bottom:1020},spawns:[330,670,450,550]};
 export type ItemKind='bomb'|'spike'|'repair';
 export interface ItemDefinition {name:string;damage:number;base:number;scaling:number;lifetime:number;color:number}
 export const ITEMS:Record<ItemKind,ItemDefinition>={bomb:{name:'Rift Bomb',damage:22,base:9,scaling:.085,lifetime:900,color:0xff58b1},spike:{name:'Gravity Spike',damage:12,base:5,scaling:.06,lifetime:900,color:0xffe45b},repair:{name:'Repair Byte',damage:-25,base:0,scaling:0,lifetime:900,color:0x27e8ed}};
-export interface Settings { music:number;sfx:number;mute:boolean;shake:boolean;flashes:boolean;contrast:boolean;touchScale:number;touchOpacity:number;keys:Record<string,string> }
-export const defaultSettings:Settings={music:.16,sfx:.55,mute:false,shake:true,flashes:true,contrast:false,touchScale:1,touchOpacity:1,keys:{left:'KeyA',right:'KeyD',up:'KeyW',down:'KeyS',jump:'Space',light:'KeyJ',heavy:'KeyK',dodge:'KeyL',item:'KeyH'}};
+export interface Settings { gameFeel:FeelPreference;haptics:boolean; music:number;sfx:number;mute:boolean;shake:boolean;flashes:boolean;contrast:boolean;touchScale:number;touchOpacity:number;keys:Record<string,string> }
+export const defaultSettings:Settings={gameFeel:'auto',haptics:true,music:.16,sfx:.55,mute:false,shake:true,flashes:true,contrast:false,touchScale:1,touchOpacity:1,keys:{left:'KeyA',right:'KeyD',up:'KeyW',down:'KeyS',jump:'Space',light:'KeyJ',heavy:'KeyK',dodge:'KeyL',item:'KeyH'}};
 export function asset(path:string){return `./assets/${path}`;}
 export function damageColor(d:number){const stops=[[0,245,247,245],[40,255,230,91],[90,255,155,62],[150,255,70,92],[240,155,31,65]];let a=stops[0],b=stops[1];for(let i=1;i<stops.length;i++){b=stops[i];if(d<=b[0])break;a=b;}const t=Math.min(1,Math.max(0,(d-a[0])/(b[0]-a[0]||1)));return '#'+a.slice(1).map((n,i)=>Math.round(n+(b[i+1]-n)*t).toString(16).padStart(2,'0')).join('');}
