@@ -2,7 +2,7 @@ import {chromium,webkit} from 'playwright';import assert from 'node:assert/stric
 const base=process.env.QA_URL||'http://localhost:5173/';
 for(const [engineName,engine] of Object.entries({chromium,webkit})){
  const browser=await engine.launch();
- try{for(const [width,height] of [[320,568],[390,844]]){
+ try{for(const [width,height] of [[320,480],[320,568],[390,844]]){
   const context=await browser.newContext({viewport:{width,height},isMobile:true,hasTouch:true});const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(String(e)));
   await page.goto(base+'?debug');await page.locator('main:not([inert])').waitFor();
   async function noScroll(){assert.deepEqual(await page.evaluate(()=>({x:scrollX,y:scrollY})),{x:0,y:0});const state=await page.locator('main>section').evaluate(el=>({overflow:getComputedStyle(el).overflowY,scroll:el.scrollTop}));assert.equal(state.overflow,'hidden');assert.equal(state.scroll,0);}

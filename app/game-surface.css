@@ -3,6 +3,7 @@ html,body{overscroll-behavior:none}
 .app-shell{position:relative}
 .app-shell,.app-shell *,.game-dialog button,.game-dialog button *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .app-shell img,.app-shell svg{-webkit-user-drag:none}
+.phaser-mount canvas{width:100%!important;height:100%!important}
 .touch-button>*,.dpad>*,.dpad svg>*{pointer-events:none}
 .setup-page-nav,.slot-page-nav{display:none}
 .app-shell .pause-layer{inset:0;z-index:50;justify-content:center;overflow:hidden;padding:16px}
@@ -79,4 +80,19 @@ html,body{overscroll-behavior:none}
  .paged-setup .rule-note{display:none}.paged-setup .screen-footer{flex-direction:row}
  .stage-screen .stage-card{flex-direction:row}.stage-screen .stage-info{width:40%}
  .results-grid{display:flex}.result-card{flex:1}.results-screen h1{font-size:26px}.results-actions{flex-wrap:nowrap}.results-actions .primary-button{width:auto}
+}
+/* Small visual viewports, including a phone with expanded browser toolbars. */
+@media(max-width:900px) and (max-height:600px) and (orientation:portrait){
+ .topbar,.in-match .topbar{height:48px}.steps{height:40px}
+ .selection-screen .fighter-showcase{min-height:70px}.selection-screen .preview-character{transform:translateX(-50%) scale(.32);bottom:25px}.selection-screen .select-platform{bottom:8px;height:17px}
+ .selection-screen .selection-heading h1{font-size:24px}.selection-screen .selection-heading{padding:6px 0}.selection-screen .selected-identity h2{font-size:24px}
+ .selection-screen .fighter-picker .fighter-option{min-height:60px}.selection-screen .fighter-option img{height:28px}.selection-screen .selection-actions .primary-button{min-height:44px}
+ .paged-setup .section-heading{margin:5px 0 0}.paged-setup .section-heading h1{font-size:24px}.paged-setup .panel-heading{display:none}
+ .paged-setup .match-rules-page>.pick{display:grid;grid-template-columns:80px minmax(0,1fr);align-items:center;gap:6px;font-size:12px}
+ .paged-setup .slots-panel{position:relative}.paged-setup .slot-page-nav{padding-right:50px}.paged-setup .slot-page-nav button{font-size:12px}
+ .paged-setup .add-cpu{position:absolute;top:8px;right:8px;width:44px;min-width:44px;margin:0;font-size:0}
+ .paged-setup .slot-row{padding:4px 0}.paged-setup .toggle-row{padding:8px 0;margin-bottom:8px;font-size:14px}.paged-setup .rule-note{font-size:14px}
+ .app-shell>.match-shell{grid-template-rows:34px minmax(0,1fr) 224px}.game-screen{width:min(100%,max(100px,calc(var(--device-height,100dvh) - 350px)))}
+ .cube-deck .control-deck{min-height:156px}.cube-deck .action-buttons{height:156px}.cube-deck .dpad{max-width:146px;max-height:146px}
+ .results-screen>.eyebrow{display:none}.results-screen h1{font-size:24px}.result-card{padding:6px}.result-card .portrait{height:26px;margin:3px 6px 3px 0}.result-card h3{font-size:14px}.result-card dl>div{padding:1px 0}
 }
