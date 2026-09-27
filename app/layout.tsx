@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "./handheld.css";
 export const viewport: Viewport = {width:'device-width',initialScale:1,viewportFit:'cover',themeColor:'#101624'};
 
 export const metadata: Metadata = {

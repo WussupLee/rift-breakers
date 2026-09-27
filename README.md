@@ -11,7 +11,7 @@ Four CC0 pixel fighters, one floating arena, and a CMYK interdimensional handhel
 - L: dash / spot dodge / directional air dodge. Aerial spot-dodge → attack: gravity cancel.
 - H: pick up, use or throw an item. S: fast fall. Down+jump drops through the upper platform.
 - Esc: pause. F3: developer hitbox overlay.
-- Phone: D-pad, B light, A heavy, ↑ jump, shoulder dodge and item. START pauses.
+- Phone: enlarged D-pad, B light, A heavy, X jump, Y dodge on the right, Z item. START pauses. Menus and matches stay inside a responsive device frame; the selection platform previews each fighter's idle animation.
 - Three jumps total, one rising recovery, directional influence, wall contact recovery and increasing damage-to-knockback.
 - Settings persist on the device: audio, controls, touch size/opacity, shake, flashes and high-contrast labels.
 
