@@ -7,7 +7,7 @@ for(const [name,engine] of Object.entries({chromium,webkit}).filter(([name])=>!p
  try{for(const [width,height] of [[1440,1000],[390,844],[844,390]]){
   const context=await browser.newContext({viewport:{width,height},isMobile:width<1000,hasTouch:width<1000});const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(String(e)));page.on('response',r=>{if(r.status()>=400)errors.push(r.url()+': '+r.status());});
   await page.goto(base+'?debug');await page.locator('main:not([inert])').waitFor();await page.getByRole('button',{name:/LET.S PLAY/}).click();await page.getByRole('button',{name:'CHOOSE ARENA'}).click();
-  assert(await page.locator('.station-preview-sky').evaluate(img=>img.complete&&img.naturalWidth===640));await page.screenshot({path:`work/qa/station/${name}-${width}-select.png`});
+  assert(await page.locator('.station-preview-sky').evaluate(async img=>{await img.decode();return img.naturalWidth===640;}));await page.screenshot({path:`work/qa/station/${name}-${width}-select.png`});
   await page.getByRole('button',{name:'PLAY NOW',exact:true}).click();await page.waitForFunction(()=>window.rift?.simulation.tick>185,{},{timeout:60000}).catch(async e=>{console.log(errors,await page.locator('main').innerText());await page.screenshot({path:`work/qa/station/${name}-${width}-failure.png`});throw e;});
   const state=await page.evaluate(()=>{const {scene,bridge,simulation:s}=window.rift;bridge.paused=true;const art=scene.station;const before=JSON.stringify(s.actors);const count=scene.children.length;
    const draw=t=>art.draw(t,scene.cameras.main.zoom,scene.scale.width,scene.scale.height);
