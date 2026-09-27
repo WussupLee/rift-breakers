@@ -1,4 +1,10 @@
 /* The play surface is an input device, not selectable document content. */
+/* Arena selection uses the same art and proportions as the live stage. */
+.station-preview .station-preview-sky{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+.station-preview .station-preview-platform{position:absolute;height:auto;image-rendering:pixelated;z-index:1}
+.station-preview .station-preview-platform.lower{width:68%;left:16%;top:69%}
+.station-preview .station-preview-platform.upper{width:24%;left:38%;top:45%}
+.station-preview .stage-coordinate{z-index:2}
 html,body{overscroll-behavior:none}
 .app-shell{position:relative}
 .app-shell,.app-shell *,.game-dialog button,.game-dialog button *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
