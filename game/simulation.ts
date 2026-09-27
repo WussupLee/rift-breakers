@@ -71,17 +71,25 @@ export class Simulation {
   const armored=b.move?.armor&&b.moveTick<b.move.startup&&force<13;
   if(!armored){b.vx=Math.cos(rad)*force*face;b.vy=Math.sin(rad)*force;b.stun=Math.min(48,Math.max(10,Math.floor(force*2.1)));b.move=null;b.grounded=false;b.diApplied=false;}
   b.freeze=Math.min(8,Math.max(3,Math.round(force/3)));if(a)a.freeze=Math.max(a.freeze,b.freeze);b.lastAttacker=owner;b.lastHit=this.tick;
-  if(b.held!==null){const item=this.items.find(x=>x.id===b.held);if(item){item.heldBy=-1;item.vx=b.vx*.4;item.vy=-3;}b.held=null;}
+  if(b.held!==null){const item=this.items.find(x=>x.id===b.held);if(item){item.heldBy=-1;item.vx=b.vx*.4;item.vy=-3;item.grace=30;}b.held=null;}
   this.emit('hit',b,force,b.x,b.y-def.height/2);
  }
  spawnProjectile(a:Actor,m:MoveDefinition){const kind=m.projectile!;const stationary=kind==='sigil'||kind==='mine';this.projectiles.push({id:this.serial++,owner:a.id,kind,x:a.x+(stationary?110:45)*a.face,y:stationary?a.y-10:a.y-36,px:a.x,py:a.y-36,vx:stationary?0:kind==='shard'?a.face*3:a.face*(kind==='beam'?17:10),vy:kind==='shard'?8:0,radius:kind==='beam'?18:stationary?34:12,life:stationary?180:85,arm:kind==='mine'?40:kind==='sigil'?10:0,damage:m.damage,base:m.base,scaling:m.scaling,angle:m.angle,hit:new Set(),gravity:kind==='shard'?.16:0});}
  stepProjectiles(){for(const p of this.projectiles){p.px=p.x;p.py=p.y;p.x+=p.vx;p.y+=p.vy;p.vy+=p.gravity;p.life--;if(p.arm>0){p.arm--;continue;}for(const b of this.actors){if(p.hit.has(b.id)||!this.canHit(p.owner,b))continue;const d=fighter(b.slot.fighter);if(segmentsDistance(p.px,p.py,p.x,p.y,b.x,b.y-d.height+d.width/2,b.x,b.y-d.width/2)<=p.radius+d.width/2){p.hit.add(b.id);this.hit(b,p.owner,p.damage,p.base,p.scaling,p.angle,p.vx<0?-1:1);if(p.kind!=='beam')p.life=0;}}}this.projectiles=this.projectiles.filter(p=>p.life>0);}
  spawnItem(kind?:ItemKind,x?:number){this.items.push({id:this.serial++,kind:kind??(['bomb','spike','repair'] as ItemKind[])[Math.floor(this.random()*3)],x:x??270+this.random()*460,y:120,px:0,py:120,vx:0,vy:0,life:900,fuse:-1,owner:-1,heldBy:-1,armed:false,grace:0});}
- useItem(a:Actor,input:InputFrame){if(a.held!==null){const it=this.items.find(i=>i.id===a.held);if(!it){a.held=null;return;}a.held=null;it.heldBy=-1;it.owner=a.id;it.armed=true;it.grace=10;it.vx=input.x?input.x*13:a.face*12;it.vy=input.y>0?8:input.y<0?-13:-5;if(it.kind==='bomb')it.fuse=105;this.emit('item',a);}else {const it=this.items.find(i=>i.heldBy<0&&Math.hypot(i.x-a.x,i.y-(a.y-28))<65);if(it){if(it.kind==='repair'){a.damage=Math.max(0,a.damage-25);it.life=0;this.emit('item',a,25);}else {it.heldBy=a.id;it.armed=false;it.fuse=-1;it.owner=a.id;a.held=it.id;this.emit('item',a);}}}}
+ useItem(a:Actor,input:InputFrame){if(a.held!==null){const it=this.items.find(i=>i.id===a.held);if(!it){a.held=null;return;}a.held=null;it.heldBy=-1;it.owner=a.id;it.armed=true;it.grace=10;it.vx=input.x?input.x*13:a.face*12;it.vy=input.y>0?8:input.y<0?-13:-5;if(it.kind==='bomb')it.fuse=105;this.emit('item',a);}else {const it=this.items.find(i=>i.life>0&&i.heldBy<0&&Math.hypot(i.x-a.x,i.y-(a.y-28))<65);if(it){if(it.kind==='repair'){a.damage=Math.max(0,a.damage-25);it.life=0;this.emit('item',a,25);}else {it.heldBy=a.id;it.armed=false;it.fuse=-1;it.owner=a.id;a.held=it.id;this.emit('item',a);}}}}
  stepItems(){for(const it of this.items){if(--it.life<=0){if(it.heldBy>=0)this.actors[it.heldBy].held=null;continue;}if(it.heldBy>=0){const a=this.actors[it.heldBy];it.x=a.x+a.face*28;it.y=a.y-36;continue;}it.px=it.x;it.py=it.y;it.vy+=.35;it.x+=it.vx;it.y+=it.vy;if(it.grace>0)it.grace--;
    for(const p of STAGE.platforms)if(it.x>=p.x&&it.x<=p.x+p.width&&it.py<=p.y-9&&it.y>=p.y-9&&it.vy>0){it.y=p.y-9;it.vy=it.kind==='bomb'?-it.vy*.55:0;it.vx*=.7;if(it.kind==='spike')it.armed=false;}
    if(it.fuse>=0&&--it.fuse<=0){this.explode(it);continue;}
    if(it.armed&&it.grace<=0){for(const b of this.actors){if(!this.canHit(it.owner,b,it.kind==='bomb'))continue;const d=fighter(b.slot.fighter);if(segmentsDistance(it.px,it.py,it.x,it.y,b.x,b.y-d.height+d.width/2,b.x,b.y-d.width/2)<d.width/2+10){if(it.kind==='bomb')this.explode(it);else {const spec=ITEMS.spike;this.hit(b,it.owner,spec.damage,spec.base+Math.abs(it.vx)*.25,spec.scaling,-30,it.vx<0?-1:1);it.armed=false;it.vx=0;it.vy=-4;}break;}}}
+   // Only safe, grounded items are collected automatically; airborne/armed items
+   // still require a deliberate catch. This rule is identical for humans and CPUs.
+   if(it.life>0&&!it.armed&&it.fuse<0&&it.grace<=0&&Math.abs(it.vx)<1&&Math.abs(it.vy)<1){
+    const resting=STAGE.platforms.some(p=>it.x>=p.x&&it.x<=p.x+p.width&&Math.abs(it.y-(p.y-9))<1);
+    if(resting){const a=this.actors.find(a=>!a.out&&!a.respawn&&!a.stun&&!a.freeze&&!a.move&&!a.dodgeTime&&a.grounded&&a.held===null&&Math.abs(a.y-it.y-9)<2&&Math.abs(a.x-it.x)<fighter(a.slot.fighter).width/2+14);
+     if(a){if(it.kind==='repair'){a.damage=Math.max(0,a.damage-25);it.life=0;this.emit('item',a,25);}else{it.heldBy=a.id;it.owner=a.id;a.held=it.id;this.emit('item',a);}}
+    }
+   }
    if(it.y>1050)it.life=0;
   }this.items=this.items.filter(i=>i.life>0);}
  explode(it:Item){it.life=0;for(const b of this.actors)if(this.canHit(it.owner,b,true)&&Math.hypot(it.x-b.x,it.y-b.y+30)<105){const s=ITEMS.bomb;this.hit(b,it.owner,s.damage,s.base,s.scaling,-45,b.x<it.x?-1:1);}const a=this.actors[Math.max(0,it.owner)];this.emit('item',a,35,it.x,it.y);}

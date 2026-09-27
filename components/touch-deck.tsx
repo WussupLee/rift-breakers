@@ -1,15 +1,18 @@
 'use client';
-import {type CSSProperties,type PointerEvent,type RefObject} from 'react';
+import {useEffect,useRef,type CSSProperties,type PointerEvent,type RefObject} from 'react';
 import {ChevronUp,ChevronDown,ChevronLeft,ChevronRight} from 'lucide-react';
 import type {GameBridge} from '@/game/scene';
 import type {Settings} from '@/game/data';
 
-function Action({action,label,sub,bridge}:{action:string;label:string;sub:string;bridge:RefObject<GameBridge|null>}) {
-  const release=(event:PointerEvent<HTMLButtonElement>)=>{bridge.current?.input?.release(event.pointerId);event.currentTarget.classList.remove('pressed');};
-  return <button className={`touch-button ${action}`} aria-label={`${label} ${sub}`} onContextMenu={e=>e.preventDefault()} onPointerDown={e=>{e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);bridge.current?.input?.press(e.pointerId,action);void bridge.current?.audio?.start();e.currentTarget.classList.add('pressed');}} onPointerUp={release} onPointerCancel={release} onLostPointerCapture={release}><b>{label}</b><small>{sub}</small></button>;
+function Action({action,label,sub,bridge,disabled=false}:{action:string;label:string;sub:string;bridge:RefObject<GameBridge|null>;disabled?:boolean}) {
+  const pointers=useRef(new Set<number>()),button=useRef<HTMLButtonElement>(null);
+  useEffect(()=>{if(disabled){for(const id of pointers.current)bridge.current?.input?.release(id);pointers.current.clear();button.current?.classList.remove('pressed');}},[disabled,bridge]);
+  useEffect(()=>()=>{for(const id of pointers.current)bridge.current?.input?.release(id);pointers.current.clear();},[bridge]);
+  const release=(event:PointerEvent<HTMLButtonElement>)=>{pointers.current.delete(event.pointerId);bridge.current?.input?.release(event.pointerId);event.currentTarget.classList.remove('pressed');};
+  return <button ref={button} disabled={disabled} title={action==='item'?(disabled?'Walk over a resting item to pick it up':'Throw held item'):sub} className={`touch-button ${action}`} aria-label={`${label} ${sub}`} onContextMenu={e=>e.preventDefault()} onPointerDown={e=>{e.preventDefault();if(disabled||(action==='item'&&bridge.current?.sim?.actors[0]?.held==null))return;pointers.current.add(e.pointerId);e.currentTarget.setPointerCapture(e.pointerId);bridge.current?.input?.press(e.pointerId,action);void bridge.current?.audio?.start();e.currentTarget.classList.add('pressed');}} onPointerUp={release} onPointerCancel={release} onLostPointerCapture={release}><b>{label}</b><small>{sub}</small></button>;
 }
 
-export function TouchDeck({bridge,settings,onPause,onGuide}:{bridge:RefObject<GameBridge|null>;settings:Settings;onPause:()=>void;onGuide:()=>void}) {
+export function TouchDeck({bridge,settings,held,onPause,onGuide}:{held:number|null;bridge:RefObject<GameBridge|null>;settings:Settings;onPause:()=>void;onGuide:()=>void}) {
   function move(event:PointerEvent<HTMLDivElement>) {
     if(!event.currentTarget.hasPointerCapture(event.pointerId))return;
     const r=event.currentTarget.getBoundingClientRect(),x=(event.clientX-r.left)/r.width-.5,y=(event.clientY-r.top)/r.height-.5;
@@ -30,6 +33,6 @@ export function TouchDeck({bridge,settings,onPause,onGuide}:{bridge:RefObject<Ga
         <Action bridge={bridge} action="heavy" label="A" sub="HEAVY"/>
       </div>
     </div>
-    <div className="deck-utility"><Action bridge={bridge} action="item" label="Z" sub="ITEM"/><button className="console-start" onClick={onPause}>START <span>PAUSE</span></button><button className="console-guide" onClick={onGuide}>MOVE GUIDE</button></div>
+    <div className="deck-utility"><button className="console-start" onClick={onPause}>START <span>PAUSE</span></button><button className="console-guide" onClick={onGuide}>MOVE GUIDE</button><Action bridge={bridge} action="item" label="Z" sub="THROW" disabled={held===null}/></div>
   </div>;
 }

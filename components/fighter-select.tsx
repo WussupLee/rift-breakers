@@ -1,15 +1,23 @@
 'use client';
-import {type CSSProperties} from 'react';
+import {useLayoutEffect,useRef,useState,type CSSProperties} from 'react';
 import {ArrowRight,ChevronLeft,ChevronRight,Check} from 'lucide-react';
 import {FIGHTERS,fighter,asset,type FighterId} from '@/game/data';
 import atlases from '@/public/assets/manifest.json';
 
+// Visible head-to-foot height, excluding weapons, the wizard's staff, and padding.
+const BODY_HEIGHT:Record<FighterId,number>={kairo:39,regent:54,vexa:42,omen:52};
+const MAX_PREVIEW_HEIGHT=Math.max(...FIGHTERS.map(f=>(atlases[f.id].idle.bounds.h+8)*160/BODY_HEIGHT[f.id]));
 function AnimatedFighter({id}:{id:FighterId}) {
   const meta=atlases[id].idle;
   const crop={x:meta.bounds.x-10,y:meta.bounds.y-8,w:meta.bounds.w+20,h:meta.bounds.h+8};
-  const scale=214/crop.h;
-  const style={width:crop.w*scale,height:214,backgroundImage:`url(${asset(`fighters/${id}/idle.png`)})`,backgroundSize:`${meta.width*meta.frames*scale}px ${meta.height*scale}px`,backgroundPositionY:-crop.y*scale,'--frame-start':`${-crop.x*scale}px`,'--frame-end':`${-(crop.x+meta.width*meta.frames)*scale}px`,animation:`fighter-idle ${meta.frames*.12}s steps(${meta.frames}) infinite`} as CSSProperties;
-  return <div className="preview-character" role="img" aria-label={`${fighter(id).name} standing on the selection platform`}><div className="idle-sprite" style={style}/></div>;
+  const node=useRef<HTMLDivElement>(null),[fit,setFit]=useState(1);
+  useLayoutEffect(()=>{const el=node.current,stage=el?.parentElement;if(!el||!stage)return;
+    const resize=()=>setFit(Math.min(1,Math.max(.1,(stage.clientHeight-parseFloat(getComputedStyle(el).bottom)-14)/MAX_PREVIEW_HEIGHT)));
+    resize();const observer=new ResizeObserver(resize);observer.observe(stage);return()=>observer.disconnect();
+  },[]);
+  const scale=160*fit/BODY_HEIGHT[id];
+  const style={width:crop.w*scale,height:crop.h*scale,backgroundImage:`url(${asset(`fighters/${id}/idle.png`)})`,backgroundSize:`${meta.width*meta.frames*scale}px ${meta.height*scale}px`,backgroundPositionY:-crop.y*scale,'--frame-start':`${-crop.x*scale}px`,'--frame-end':`${-(crop.x+meta.width*meta.frames)*scale}px`,animation:`fighter-idle ${meta.frames*.12}s steps(${meta.frames}) infinite`} as CSSProperties;
+  return <div ref={node} data-body-height={160*fit} className="preview-character" role="img" aria-label={`${fighter(id).name} standing on the selection platform`}><div className="idle-sprite" style={style}/></div>;
 }
 
 export function FighterSelect({id,onChoose,onContinue,onGuide}:{id:FighterId;onChoose:(id:FighterId)=>void;onContinue:()=>void;onGuide:()=>void}) {
@@ -33,7 +41,7 @@ export function FighterSelect({id,onChoose,onContinue,onGuide}:{id:FighterId;onC
       <div className="selection-info">
         <div className="selected-identity" aria-live="polite"><p className="eyebrow">{selected.title}</p><h2>{selected.name}</h2><p className="selected-bio">{selected.bio}</p></div>
         <div className="selection-stats">{[['Speed',selected.speed/7],['Power',selected.power/1.3],['Weight',selected.weight/1.4]].map(([label,value])=><div key={label}><span>{label}</span><meter min={0} max={1} value={Number(value)} aria-label={String(label)}/></div>)}</div>
-        <div className="fighter-picker" role="group" aria-label="Choose a fighter">{FIGHTERS.map(f=><button key={f.id} className={`fighter-card fighter-option ${id===f.id?'selected':''}`} style={{'--fighter':f.color} as CSSProperties} onClick={()=>onChoose(f.id)} aria-label={`Select ${f.name}`} aria-pressed={id===f.id}><img src={asset(`fighters/${f.id}/portrait.png`)} alt=""/><span>{f.name.split(' ')[0]}</span>{id===f.id&&<Check className="fighter-check" size={14}/>}</button>)}</div>
+        <div className="fighter-picker" role="group" aria-label="Choose a fighter">{FIGHTERS.map(f=><button key={f.id} className={`fighter-card fighter-option ${id===f.id?'selected':''}`} style={{'--fighter':f.color} as CSSProperties} onClick={()=>onChoose(f.id)} aria-label={`Select ${f.name}`} aria-pressed={id===f.id}><span className="selection-thumbnail"><img style={{height:`${(atlases[f.id].idle.bounds.h+8)/BODY_HEIGHT[f.id]*100}%`}} src={asset(`fighters/${f.id}/portrait.png`)} alt=""/></span><span>{f.name.split(' ')[0]}</span>{id===f.id&&<Check className="fighter-check" size={14}/>}</button>)}</div>
         <div className="selection-actions"><button className="primary-button" onClick={onContinue}>LET’S PLAY <ArrowRight size={24}/></button><button className="text-button" onClick={onGuide}>How to play</button></div>
       </div>
     </div>
