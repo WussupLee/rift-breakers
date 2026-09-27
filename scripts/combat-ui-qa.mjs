@@ -16,7 +16,7 @@ for(const [name,engine] of Object.entries({chromium,webkit})){
   assert(bounds[4].x>195);assert(bounds[4].y>bounds[3].y);assert(bounds[1].y<bounds[3].y,'Jump above heavy');
   const throwButton=page.getByRole('button',{name:'Z THROW',exact:true});assert(await throwButton.isDisabled());
   await page.evaluate(()=>{const {simulation:s,bridge}=window.rift;bridge.paused=true;const a=s.actors[0];a.x=330;a.y=610;a.grounded=true;a.move=null;a.stun=0;a.freeze=0;a.dodgeTime=0;s.spawnItem('spike',a.x);s.items.at(-1).y=601;s.stepItems();bridge.onUpdate(s);});
-  await throwButton.waitFor();assert(await throwButton.isEnabled());await throwButton.tap();
+  await page.locator('.touch-button.item:enabled').waitFor();await throwButton.tap();
   await page.evaluate(()=>{const {simulation:s,bridge}=window.rift;const input=bridge.input.sample();s.step(input,[input,{x:0,y:0,jump:false,light:false,heavy:false,dodge:false,item:false}]);bridge.onUpdate(s);});
   assert.equal(await page.evaluate(()=>window.rift.simulation.actors[0].held),null);await page.locator('.touch-button.item:disabled').waitFor();assert.equal(await page.evaluate(()=>window.rift.simulation.items[0].armed),true);
   await page.evaluate(()=>{const {simulation:s,bridge}=window.rift;const a=s.actors[0];a.move=null;a.freeze=0;a.invulnerable=0;a.dodgeTime=12;a.dodgeAge=0;bridge.settings.flashes=true;});
