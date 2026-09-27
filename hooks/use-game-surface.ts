@@ -9,7 +9,7 @@ export function useGameSurface(ref:RefObject<HTMLElement|null>) {
   useEffect(()=>{
     const root=ref.current;if(!root)return;
     const mobile=()=>matchMedia('(pointer:coarse)').matches||innerWidth<=900;
-    const cancel=(event:Event)=>{if(event.cancelable)event.preventDefault();};
+    const cancel=(event:Event)=>{if(event.target instanceof Element&&event.target.closest('input,textarea,select'))return;if(event.cancelable)event.preventDefault();};
     const control=(target:EventTarget|null)=>target instanceof Element&&!!target.closest('.touch-button,.dpad,.phaser-mount');
     const touchStart=(event:TouchEvent)=>{if(mobile()&&(control(event.target)||event.touches.length>1))cancel(event);};
     const touchEnd=(event:TouchEvent)=>{if(mobile()&&control(event.target))cancel(event);};

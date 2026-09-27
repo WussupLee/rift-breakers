@@ -25,7 +25,7 @@ export const FIGHTERS:FighterDefinition[]=[
  {id:'omen',name:'Omen Null',title:'THE LAST SIGNAL',role:'Zoner',color:'#b7a1ff',speed:4.9,acceleration:.8,jump:12.2,gravity:.48,weight:.95,power:1,height:67,width:27,source:'evil-wizard-2',bio:'Something answered from the other side. Control the arena with bolts, delayed traps, and a short rift-shift recovery.',moves:moves('omen')}
 ];
 export const fighter=(id:FighterId)=>FIGHTERS.find(f=>f.id===id)!;
-export interface Slot { fighter:FighterId; difficulty:Difficulty; team:number }
+export interface Slot { fighter:FighterId; difficulty:Difficulty; team:number; name?:string; human?:boolean }
 export interface MatchConfig { feel?:FeelMode; mode:'stock'|'timed'; stocks:number; seconds:number; teams:boolean; friendlyFire:boolean; slots:Slot[]; items:'off'|'low'|'normal'; seed:number }
 export const defaultConfig:MatchConfig={mode:'stock',stocks:3,seconds:240,teams:false,friendlyFire:false,slots:[{fighter:'kairo',difficulty:'medium',team:0},{fighter:'vexa',difficulty:'medium',team:1}],items:'low',seed:743};
 export interface StageDefinition { platforms:{x:number;y:number;width:number;oneWay:boolean}[]; blast:{left:number;right:number;top:number;bottom:number}; spawns:number[] }

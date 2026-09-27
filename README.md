@@ -1,9 +1,9 @@
 # RIFT//BREAKERS
-A local browser platform fighter built with TypeScript, React/Vinext and Phaser.
+A browser platform fighter with local CPU play and QR-invite multiplayer built with TypeScript, React/Vinext and Phaser.
 
 **Play:** https://wussuplee.github.io/rift-breakers/
 
-Four CC0 pixel fighters, one floating arena, and a CMYK interdimensional handheld interface. Mobile portrait uses a square arena above a multitouch D-pad and action buttons; desktop uses keyboard controls. No account, tracking, backend, or multiplayer server.
+Four CC0 pixel fighters, one floating arena, and a CMYK interdimensional handheld interface. Mobile portrait uses a square arena above a multitouch D-pad and action buttons; desktop uses keyboard controls. No player account or app installation. Solo play is local; optional multiplayer uses PeerJS Cloud signaling and browser-to-browser WebRTC data channels.
 
 ## Play
 - A/D or left/right: move. W, Space or up: jump.
@@ -63,3 +63,25 @@ Automated coverage includes the 44 moves facing both ways, startup/one-hit enfor
 Physical iPhone/Android touch feel, Safari/Firefox on real devices, accessibility with assistive technology, exhaustive visual frame-by-frame hitbox QA, long-session memory profiling, and competitive balance remain release-testing work. Attack arcs are gameplay geometry, not per-pixel collisions; some move names describe intended fighting identity rather than unique multi-hit combos. Animation-state transforms and reused attack families are intentional first-release simplifications.
 
 The project was scaffolded with the Sites portable Vinext starter; publishing uses GitHub Pages as requested. Unused starter components do not add a backend to the game.
+
+## Multiplayer / QR invites
+1. Choose **PLAY FRIENDS**, enter a display name and fighter, then **HOST A ROOM**.
+2. Friends scan the room QR with their normal phone camera, or open the game and enter the 12-character code. The invite is generated locally and contains the game URL plus a room-code fragment.
+3. Guests choose their names/fighters and **READY TO BRAWL**. The host can add/remove CPUs, choose their difficulty, assign teams, and adjust rules. Human joins replace CPU slots if present; four humans fills the room.
+4. The host starts once everyone is ready. All devices load before the shared countdown starts. After results, the host opens **REMATCH LOBBY**.
+
+The host runs the authoritative simulation and CPUs; guests send validated, sequenced inputs for their assigned fighter. State snapshots travel at up to 20 Hz with render interpolation. Client messages cannot set damage, stocks, winners or another player's inputs. Short taps are queued across simulation steps; stale held inputs expire after 350 ms. Disconnect detection takes up to 12 seconds. A disconnected guest becomes a CPU for the rest of the match; the host leaving ends the room. There is no host migration, mid-round joining, identity/account authentication, rollback or competitive anti-cheat. Room possession is invite access—share only with people you trust. Display names are local preferences and visible to peers; they are not verified identities.
+
+Keep the host tab foregrounded and the phone awake. Opening host settings pauses everyone; a guest opening settings disables only their controls and the battle continues. Backgrounding or locking a host phone can suspend the browser and disconnect the room. Room pace is host-controlled (Relaxed by default); per-device Game feel settings still govern solo matches.
+
+### Hosting and network limits
+The game remains on GitHub Pages. PeerJS 1.5.5 (MIT) provides free public signaling; no paid service, account, billing resource, or private backend was provisioned. Data channels are encrypted by WebRTC, but peers can learn each other's network addresses. No microphone/camera permission is requested. QRCode 1.5.4 (MIT) generates QR images locally, without a QR-image service.
+
+This deployment uses STUN and **has no TURN relay**. Same Wi-Fi is recommended. Different-network play works when direct WebRTC connectivity is possible, but some carrier NATs, enterprise Wi-Fi, VPNs and firewalls will fail. PeerJS Cloud is a third-party availability dependency. Reliable arbitrary-network support requires an authorized relay service (with short-lived credentials issued by a backend) or a hosted WebSocket game service; neither is silently represented as already deployed. Connection errors offer same-Wi-Fi/retry guidance rather than leaving an infinite spinner.
+
+Primary service documentation: [PeerJS API](https://peerjs.com/client/api/peer), [free TURN discontinuation](https://github.com/orgs/peers/discussions/1172).
+
+### Multiplayer verification
+- `tests/multiplayer.test.ts`: protocol validation, invite codes, Unicode name bounds, input ownership/replays/staleness, snapshot reconstruction, room capacity, CPU replacement, readiness/loading, teams and disconnect takeover.
+- `node scripts/multiplayer-qa.mjs`: actual PeerJS Cloud signaling and four real WebRTC browser clients, fifth-player rejection, cross-client movement, shared pause/results, CPU takeover, rematch and host disconnection. Uses public signaling, so internet access is required.
+- Set `QA_GUEST_ENGINE=webkit` to use WebKit for one guest; `QA_URL` selects a local or deployed build. This is browser automation, not certification of physical phones, cross-carrier NAT traversal or production latency.
