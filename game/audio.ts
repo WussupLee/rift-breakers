@@ -8,7 +8,7 @@ export class GameAudio {
  private musicSource:AudioBufferSourceNode|null=null;private loading:Promise<void>|null=null;private musicLoading:Promise<void>|null=null;
  private abort=new AbortController();private disposed=false;private voices=new Set<Voice>();private gate=new CueGate();
  private variants=new Map<AudioCue,number>();private targets=new WeakMap<GainNode,number>();private envelope:GainNode|null=null;private match=false;private paused=true;private preview=false;
- private offset=0;private musicStarted=0;private duckUntil=0;private previousTick=-1;private countdown=-1;private finished=false;
+ private offset=0;private musicStarted=0;private duckUntil=0;private duckTimer:ReturnType<typeof setTimeout>|undefined;private previousTick=-1;private countdown=-1;private finished=false;
  private observations=new Map<number,{x:number;distance:number;charge:number;drop:number;fast:boolean}>();
  played:Partial<Record<AudioCue,number>>={};
  constructor(settings:Settings){this.value=settings;document.addEventListener('visibilitychange',this.visibility);}
@@ -64,7 +64,7 @@ export class GameAudio {
   if(!c||c.state!=='running'||this.disposed||document.hidden||this.value.mute||busVolume(spec.bus,this.value)<=0)return;
   if(!audition&&this.match&&this.paused)return;
   const count=this.variants.get(kind)??0,name=spec.samples[count%spec.samples.length],buffer=this.buffers.get(name);
-  if(!buffer||!this.gate.accept(kind,actor,performance.now()))return;
+  if(!buffer||!audition&&!this.gate.accept(kind,actor,performance.now()))return;
   if(spec.bus==='crowd')for(const v of this.voices)if(v.bus==='crowd')this.stopVoice(v);
   const same=[...this.voices].filter(v=>v.bus===spec.bus),limit=spec.bus==='sfx'?12:spec.bus==='voices'?3:1;
   if(same.length>=limit){const lowest=same.sort((a,b)=>a.priority-b.priority)[0];if(lowest.priority>spec.priority)return;this.stopVoice(lowest);}
@@ -75,7 +75,7 @@ export class GameAudio {
   const v:Voice={source,gain,pan,priority:spec.priority,bus:spec.bus};this.voices.add(v);
   source.onended=()=>{source.disconnect();gain.disconnect();pan.disconnect();this.voices.delete(v);};source.start();
   this.variants.set(kind,count+1);this.played[kind]=(this.played[kind]??0)+1;
-  if(['heavyHit','ko','explosion','gasp','cheer'].includes(kind)){this.duckUntil=performance.now()+(kind==='cheer'?1800:kind==='gasp'?800:280);this.sync();}
+  if(['heavyHit','ko','explosion','gasp','cheer'].includes(kind)){this.duckUntil=Math.max(this.duckUntil,performance.now()+(kind==='cheer'?1800:kind==='gasp'?800:280));clearTimeout(this.duckTimer);this.duckTimer=setTimeout(()=>this.sync(),this.duckUntil-performance.now()+20);this.sync();}
  }
  private stopVoice(v:Voice){const now=this.context?.currentTime??0;v.gain.gain.setTargetAtTime(0,now,.005);v.source.stop(now+.025);this.voices.delete(v);}
  private stopEffects(){for(const v of this.voices)this.stopVoice(v);}
@@ -96,5 +96,5 @@ export class GameAudio {
   }
  }
  get status(){return {loaded:this.buffers.size,failures:[...this.failures],active:this.voices.size,musicPlaying:!!this.musicSource,context:this.context?.state};}
- destroy(){this.disposed=true;this.abort.abort();document.removeEventListener('visibilitychange',this.visibility);this.stopEffects();this.stopMusic();this.buffers.clear();if(this.context&&this.context.state!=='closed')void this.context.close().catch(()=>{});}
+ destroy(){this.disposed=true;clearTimeout(this.duckTimer);this.abort.abort();document.removeEventListener('visibilitychange',this.visibility);this.stopEffects();this.stopMusic();this.buffers.clear();if(this.context&&this.context.state!=='closed')void this.context.close().catch(()=>{});}
 }

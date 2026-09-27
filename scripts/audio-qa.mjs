@@ -22,7 +22,9 @@ for(const [name,engine] of Object.entries({chromium,...(process.env.QA_FIREFOX?{
   await page.getByRole('button',{name:'Audio & settings',exact:true}).click();
   await page.getByRole('slider',{name:'Character voices',exact:true}).waitFor();await page.getByRole('slider',{name:'Crowd reactions',exact:true}).waitFor();
   await page.locator('#sound-cue').selectOption('jump');await page.getByRole('button',{name:'Play sound',exact:true}).click();await page.getByRole('status').filter({hasText:'Playing at your current mix levels.'}).waitFor();
-  await page.getByRole('button',{name:'Preview fight music',exact:true}).click();await page.waitForFunction(()=>window.rift.bridge.audio.status.musicPlaying);await page.getByRole('button',{name:'Stop music',exact:true}).click();await page.waitForFunction(()=>!window.rift.bridge.audio.status.musicPlaying);
+  await page.getByRole('button',{name:'Preview fight music',exact:true}).click();await page.waitForFunction(()=>window.rift.bridge.audio.status.musicPlaying);
+  await page.evaluate(()=>window.rift.bridge.audio.audition('heavyHit'));await page.waitForTimeout(900);assert(await page.evaluate(()=>Math.abs(window.rift.bridge.audio.musicGain.gain.value-window.rift.bridge.audio.settings.music*.3)<.001),'Music duck releases while gameplay is paused');
+  await page.getByRole('button',{name:'Stop music',exact:true}).click();await page.waitForFunction(()=>!window.rift.bridge.audio.status.musicPlaying);
   await page.screenshot({path:'work/qa/audio/'+name+'-sound-check.png'});
   const mix=await page.evaluate(async()=>{
    const audio=window.rift.bridge.audio;
@@ -50,6 +52,9 @@ for(const [name,engine] of Object.entries({chromium,...(process.env.QA_FIREFOX?{
   await page.getByRole('button',{name:'REMATCH',exact:true}).waitFor({timeout:15000});assert.equal(await page.evaluate(()=>window.audioBeforeRematch.status.musicPlaying),false);
   await page.getByRole('button',{name:'REMATCH',exact:true}).click();await page.waitForFunction(()=>window.rift?.simulation.tick>155&&window.rift.bridge.audio.status.musicPlaying);
   assert(await page.evaluate(()=>window.audioBeforeRematch===window.rift.bridge.audio),'Reuse one audio engine on rematch');
+  await page.getByRole('button',{name:'START PAUSE',exact:true}).click();await page.getByRole('button',{name:'Return to fighters',exact:true}).click();await page.getByRole('button',{name:'Open settings',exact:true}).click();await page.getByRole('button',{name:'Preview fight music',exact:true}).click();
+  await page.waitForFunction(()=>window.audioBeforeRematch.status.musicPlaying);await page.evaluate(()=>window.audioBeforeRematch.audition('heavyHit'));await page.waitForTimeout(900);
+  assert(await page.evaluate(()=>Math.abs(window.audioBeforeRematch.musicGain.gain.value-window.audioBeforeRematch.settings.music*.3)<.001),'Ducking releases in menus without a game update loop');
   assert.deepEqual(errors,[]);assert.deepEqual(failed,[]);
   reports.push({engine:name,initial,...mix,errors,failed});console.log(name,'PASS',JSON.stringify({initial,stress:mix.stress,cues:Object.keys(mix.played).length}));
   await context.close();
