@@ -1,0 +1,11 @@
+import {emptyInput,type InputFrame,type Settings} from './data';
+export class InputController {
+ keys=new Set<string>();pendingKeys=new Set<string>();pendingTouch=new Set<string>();touch=new Map<number,string>();paused=false;settings:Settings;onPause:()=>void;onDebug:()=>void;onGesture:()=>void=()=>{};
+ constructor(settings:Settings,onPause:()=>void,onDebug:()=>void){this.settings=settings;this.onPause=onPause;this.onDebug=onDebug;window.addEventListener('keydown',this.down);window.addEventListener('keyup',this.up);window.addEventListener('blur',this.blur);document.addEventListener('visibilitychange',this.visibility);}
+ down=(e:KeyboardEvent)=>{this.onGesture();if(e.target instanceof HTMLInputElement)return;if(e.code==='Escape'&&!e.repeat){this.onPause();return;}if(e.code==='F3'&&!e.repeat){e.preventDefault();this.onDebug();return;}if(Object.values(this.settings.keys).includes(e.code)||e.code.startsWith('Arrow')){e.preventDefault();if(!this.keys.has(e.code))this.pendingKeys.add(e.code);this.keys.add(e.code);}};
+ up=(e:KeyboardEvent)=>{this.keys.delete(e.code);};blur=()=>{this.clear();this.onPause();};visibility=()=>{if(document.hidden)this.blur();};
+ clear(){this.keys.clear();this.touch.clear();this.pendingKeys.clear();this.pendingTouch.clear();}
+ press(id:number,action:string){if(this.touch.get(id)!==action)for(const part of action.split('+'))this.pendingTouch.add(part);this.touch.set(id,action);}release(id:number){this.touch.delete(id);}
+ sample():InputFrame{if(this.paused)return emptyInput();const key=(code:string)=>this.keys.has(code)||this.pendingKeys.has(code);const active=(action:string)=>key(this.settings.keys[action])||this.pendingTouch.has(action)||[...this.touch.values()].some(v=>v.split('+').includes(action));const result={x:Number(active('right')||key('ArrowRight'))-Number(active('left')||key('ArrowLeft')),y:Number(active('down')||key('ArrowDown'))-Number(active('up')||key('ArrowUp')),jump:active('jump')||active('up')||key('ArrowUp'),light:active('light'),heavy:active('heavy'),dodge:active('dodge'),item:active('item')};this.pendingKeys.clear();this.pendingTouch.clear();return result;}
+ destroy(){window.removeEventListener('keydown',this.down);window.removeEventListener('keyup',this.up);window.removeEventListener('blur',this.blur);document.removeEventListener('visibilitychange',this.visibility);this.clear();}
+}

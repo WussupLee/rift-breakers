@@ -1,0 +1,11 @@
+import type {Settings} from './data';
+export class GameAudio {
+ context:AudioContext|null=null;settings:Settings;buffers=new Map<string,AudioBuffer>();last=0;musicStep=0;
+ constructor(settings:Settings){this.settings=settings;}
+ async start(){if(!this.context){this.context=new AudioContext();for(const name of ['hit','heavy','jump','ko','ui']){try{const url=new URL(`assets/audio/${name}.ogg`,document.baseURI);const response=await fetch(url);if(response.ok)this.buffers.set(name,await this.context.decodeAudioData(await response.arrayBuffer()));}catch{}}}if(this.context.state==='suspended')await this.context.resume();}
+ play(kind:string,power=1){const c=this.context;if(!c||this.settings.mute)return;const volume=this.settings.sfx;if(volume<=0)return;const key=kind==='hit'?(power>11?'heavy':'hit'):kind==='ko'?'ko':kind==='jump'||kind==='dodge'?'jump':'ui';const buffer=this.buffers.get(key);if(buffer){const source=c.createBufferSource(),g=c.createGain();source.buffer=buffer;source.playbackRate.value=.92+Math.random()*.16;g.gain.value=volume*.4;source.connect(g).connect(c.destination);source.start();return;}
+  const osc=c.createOscillator(),gain=c.createGain();osc.type=kind==='hit'?'sawtooth':'square';osc.frequency.setValueAtTime(kind==='ko'?120:kind==='hit'?160:kind==='jump'?340:600,c.currentTime);osc.frequency.exponentialRampToValueAtTime(kind==='jump'?780:35,c.currentTime+.12);gain.gain.setValueAtTime(volume*.055,c.currentTime);gain.gain.exponentialRampToValueAtTime(.001,c.currentTime+.16);osc.connect(gain).connect(c.destination);osc.start();osc.stop(c.currentTime+.17);
+ }
+ music(tick:number){const c=this.context;if(!c||this.settings.mute||!this.settings.music||tick-this.last<15)return;this.last=tick;const notes=[130.81,0,196,261.63,155.56,0,233.08,196,116.54,0,174.61,233.08,155.56,196,174.61,0];const freq=notes[this.musicStep++%notes.length];if(!freq)return;const o=c.createOscillator(),g=c.createGain();o.type='triangle';o.frequency.value=freq;g.gain.setValueAtTime(this.settings.music*.045,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.18);o.connect(g).connect(c.destination);o.start();o.stop(c.currentTime+.2);}
+ destroy(){this.context?.close();}
+}

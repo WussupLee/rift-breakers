@@ -1,0 +1,406 @@
+{
+  "kairo": {
+    "idle": {
+      "width": 126,
+      "height": 126,
+      "frames": 10,
+      "bounds": {
+        "x": 46,
+        "y": 43,
+        "w": 44,
+        "h": 39
+      }
+    },
+    "run": {
+      "width": 126,
+      "height": 126,
+      "frames": 8,
+      "bounds": {
+        "x": 48,
+        "y": 42,
+        "w": 33,
+        "h": 40
+      }
+    },
+    "jump": {
+      "width": 126,
+      "height": 126,
+      "frames": 3,
+      "bounds": {
+        "x": 49,
+        "y": 45,
+        "w": 36,
+        "h": 51
+      }
+    },
+    "fall": {
+      "width": 126,
+      "height": 126,
+      "frames": 3,
+      "bounds": {
+        "x": 51,
+        "y": 40,
+        "w": 36,
+        "h": 56
+      }
+    },
+    "attack1": {
+      "width": 126,
+      "height": 126,
+      "frames": 7,
+      "bounds": {
+        "x": 45,
+        "y": 20,
+        "w": 40,
+        "h": 62
+      }
+    },
+    "attack2": {
+      "width": 126,
+      "height": 126,
+      "frames": 6,
+      "bounds": {
+        "x": 51,
+        "y": 54,
+        "w": 39,
+        "h": 28
+      }
+    },
+    "attack3": {
+      "width": 126,
+      "height": 126,
+      "frames": 9,
+      "bounds": {
+        "x": 22,
+        "y": 33,
+        "w": 65,
+        "h": 49
+      }
+    },
+    "hurt": {
+      "width": 126,
+      "height": 126,
+      "frames": 3,
+      "bounds": {
+        "x": 41,
+        "y": 44,
+        "w": 42,
+        "h": 38
+      }
+    },
+    "death": {
+      "width": 126,
+      "height": 126,
+      "frames": 11,
+      "bounds": {
+        "x": 44,
+        "y": 42,
+        "w": 42,
+        "h": 40
+      }
+    }
+  },
+  "regent": {
+    "idle": {
+      "width": 160,
+      "height": 111,
+      "frames": 8,
+      "bounds": {
+        "x": 64,
+        "y": 51,
+        "w": 31,
+        "h": 54
+      }
+    },
+    "run": {
+      "width": 160,
+      "height": 111,
+      "frames": 8,
+      "bounds": {
+        "x": 58,
+        "y": 55,
+        "w": 39,
+        "h": 50
+      }
+    },
+    "jump": {
+      "width": 160,
+      "height": 111,
+      "frames": 2,
+      "bounds": {
+        "x": 59,
+        "y": 51,
+        "w": 41,
+        "h": 54
+      }
+    },
+    "fall": {
+      "width": 160,
+      "height": 111,
+      "frames": 2,
+      "bounds": {
+        "x": 56,
+        "y": 51,
+        "w": 44,
+        "h": 49
+      }
+    },
+    "attack1": {
+      "width": 160,
+      "height": 111,
+      "frames": 4,
+      "bounds": {
+        "x": 58,
+        "y": 37,
+        "w": 44,
+        "h": 68
+      }
+    },
+    "attack2": {
+      "width": 160,
+      "height": 111,
+      "frames": 4,
+      "bounds": {
+        "x": 61,
+        "y": 61,
+        "w": 39,
+        "h": 44
+      }
+    },
+    "attack3": {
+      "width": 160,
+      "height": 111,
+      "frames": 4,
+      "bounds": {
+        "x": 20,
+        "y": 48,
+        "w": 59,
+        "h": 57
+      }
+    },
+    "hurt": {
+      "width": 160,
+      "height": 111,
+      "frames": 4,
+      "bounds": {
+        "x": 64,
+        "y": 51,
+        "w": 31,
+        "h": 54
+      }
+    },
+    "death": {
+      "width": 160,
+      "height": 111,
+      "frames": 6,
+      "bounds": {
+        "x": 64,
+        "y": 51,
+        "w": 31,
+        "h": 54
+      }
+    }
+  },
+  "vexa": {
+    "idle": {
+      "width": 150,
+      "height": 150,
+      "frames": 8,
+      "bounds": {
+        "x": 61,
+        "y": 55,
+        "w": 32,
+        "h": 42
+      }
+    },
+    "run": {
+      "width": 150,
+      "height": 150,
+      "frames": 8,
+      "bounds": {
+        "x": 59,
+        "y": 63,
+        "w": 43,
+        "h": 34
+      }
+    },
+    "jump": {
+      "width": 150,
+      "height": 150,
+      "frames": 2,
+      "bounds": {
+        "x": 60,
+        "y": 51,
+        "w": 32,
+        "h": 43
+      }
+    },
+    "fall": {
+      "width": 150,
+      "height": 150,
+      "frames": 2,
+      "bounds": {
+        "x": 63,
+        "y": 45,
+        "w": 33,
+        "h": 52
+      }
+    },
+    "attack1": {
+      "width": 150,
+      "height": 150,
+      "frames": 5,
+      "bounds": {
+        "x": 65,
+        "y": 64,
+        "w": 32,
+        "h": 33
+      }
+    },
+    "attack2": {
+      "width": 150,
+      "height": 150,
+      "frames": 5,
+      "bounds": {
+        "x": 39,
+        "y": 55,
+        "w": 42,
+        "h": 42
+      }
+    },
+    "attack3": {
+      "width": 150,
+      "height": 150,
+      "frames": 7,
+      "bounds": {
+        "x": 65,
+        "y": 66,
+        "w": 36,
+        "h": 31
+      }
+    },
+    "hurt": {
+      "width": 150,
+      "height": 150,
+      "frames": 3,
+      "bounds": {
+        "x": 50,
+        "y": 62,
+        "w": 44,
+        "h": 35
+      }
+    },
+    "death": {
+      "width": 150,
+      "height": 150,
+      "frames": 8,
+      "bounds": {
+        "x": 52,
+        "y": 62,
+        "w": 44,
+        "h": 35
+      }
+    }
+  },
+  "omen": {
+    "idle": {
+      "width": 250,
+      "height": 250,
+      "frames": 8,
+      "bounds": {
+        "x": 108,
+        "y": 72,
+        "w": 57,
+        "h": 95
+      }
+    },
+    "run": {
+      "width": 250,
+      "height": 250,
+      "frames": 8,
+      "bounds": {
+        "x": 94,
+        "y": 106,
+        "w": 65,
+        "h": 61
+      }
+    },
+    "jump": {
+      "width": 250,
+      "height": 250,
+      "frames": 2,
+      "bounds": {
+        "x": 91,
+        "y": 86,
+        "w": 69,
+        "h": 81
+      }
+    },
+    "fall": {
+      "width": 250,
+      "height": 250,
+      "frames": 2,
+      "bounds": {
+        "x": 107,
+        "y": 81,
+        "w": 65,
+        "h": 86
+      }
+    },
+    "attack1": {
+      "width": 250,
+      "height": 250,
+      "frames": 8,
+      "bounds": {
+        "x": 74,
+        "y": 107,
+        "w": 58,
+        "h": 60
+      }
+    },
+    "attack2": {
+      "width": 250,
+      "height": 250,
+      "frames": 8,
+      "bounds": {
+        "x": 109,
+        "y": 58,
+        "w": 72,
+        "h": 109
+      }
+    },
+    "attack3": {
+      "width": 250,
+      "height": 250,
+      "frames": 8,
+      "bounds": {
+        "x": 74,
+        "y": 107,
+        "w": 58,
+        "h": 60
+      }
+    },
+    "hurt": {
+      "width": 250,
+      "height": 250,
+      "frames": 3,
+      "bounds": {
+        "x": 106,
+        "y": 80,
+        "w": 45,
+        "h": 87
+      }
+    },
+    "death": {
+      "width": 250,
+      "height": 250,
+      "frames": 7,
+      "bounds": {
+        "x": 108,
+        "y": 84,
+        "w": 45,
+        "h": 83
+      }
+    }
+  }
+}
