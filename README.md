@@ -16,6 +16,14 @@ Four CC0 pixel fighters, one floating arena, and a CMYK interdimensional handhel
 - Three jumps total, one rising recovery, directional influence, wall contact recovery and increasing damage-to-knockback.
 - Settings persist on the device: audio, controls, touch size/opacity, shake, flashes and high-contrast labels.
 
+### Dodge protection
+
+Y / L grants **16 protected simulation frames** to every fighter: standing, moving on the ground, or dodging in the air. This is about 0.27 seconds in Classic and 0.31 seconds in Relaxed/mobile. Moving-ground dodge is now an evasive dash, not the old unprotected dash. Protection starts immediately when a legal dodge activates and blocks melee, projectiles, thrown items and bomb blasts, including your own bomb.
+
+A translucent white fighter, steady white halo and shrinking cyan arc show the actual protected window; optional white flashes respect the reduced-flashes setting. `EVADED` appears only when a hostile hitbox actually intersects during protection, once per dodge. Mobile Y displays READY / SAFE / cooldown seconds / BUSY. Ground cooldown remains 45 ticks; air cooldown remains 130 ticks (landing caps the remainder at 45). Holding dodge does not repeat it. Attack recovery and hitstun cannot be canceled into a dodge; late taps can use the existing input buffer. A gravity-cancel attack ends protection immediately, and lingering attacks can hit after protection expires. Dodging does not protect against falling outside the blast zones.
+
+Multiplayer protocol 2 carries confirmed evades; everyone should refresh before joining a room. Tests exercise all four fighters and dodge directions, every one of the 44 attacks facing both ways against each defender, thrown items/blasts, exact expiry, cooldowns and touch/visual feedback.
+
 ## Roster
 | Fighter | Archetype | Art |
 | --- | --- | --- |

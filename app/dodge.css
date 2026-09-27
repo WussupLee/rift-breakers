@@ -1,0 +1,6 @@
+.cube-deck .touch-button.dodge{position:relative}
+.cube-deck .touch-button.dodge .dodge-readout{position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);border:1px solid #737a9e;border-radius:4px;background:#0c1220;color:#c5cbed;padding:1px 5px;font:bold 9px/12px monospace;letter-spacing:.3px;white-space:nowrap;pointer-events:none}
+.cube-deck .touch-button.dodge[data-dodge-state=active]{border-color:#fff;background:#28394a;box-shadow:0 0 0 2px #ffffff50,inset 0 0 16px #ffffff22;color:#fff}
+.cube-deck .touch-button.dodge[data-dodge-state=active] .dodge-readout{background:#fff;color:#081320;border-color:#fff}
+.cube-deck .touch-button.dodge[data-dodge-state=ready] .dodge-readout{border-color:#63d3da;color:#88f3ef}
+.cube-deck .touch-button.dodge[data-dodge-state=cooldown]{border-style:dashed}

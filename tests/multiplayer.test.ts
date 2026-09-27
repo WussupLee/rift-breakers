@@ -10,6 +10,8 @@ test('Starting a rematch resets input sequencing without accepting old-epoch pac
 
 function host(){const room=new MultiplayerRoom(true,'Host','kairo');room.id='host';room.state.phase='lobby';room.state.members=[{id:'host',name:'Host',fighter:'kairo',difficulty:'medium',team:0,cpu:false,ready:true}];room.addCPU();return room;}
 function connection(id:string){const messages:unknown[]=[];const c={peer:id,open:true,dataChannel:{bufferedAmount:0},send:(data:unknown)=>messages.push(data),close:()=>{}} as unknown as DataConnection;return {c,messages};}
+
+test('Older dodge-rule clients receive a clear refresh instruction',()=>{const room=host(),{c,messages}=connection('old-client');room['receiveGuest'](c,{type:'hello',version:NETWORK_VERSION-1,name:'Old client',fighter:'kairo'});assert.match(JSON.stringify(messages),/Refresh on every device/);assert.equal(room.state.members.some(m=>m.id==='old-client'),false);room.destroy();});
 function join(room:MultiplayerRoom,id:string){const link=connection(id);room.connections.set(id,link.c);room['receiveGuest'](link.c,{type:'hello',version:NETWORK_VERSION,name:id,fighter:'vexa'});return link;}
 
 test('Room codes are cryptographically generated, bounded, and invite fragments round trip',()=>{const codes=new Set(Array.from({length:100},()=>createRoomCode()));assert.equal(codes.size,100);for(const code of codes){assert(validRoomCode(code));const url=new URL(inviteURL('https://example.com/rift-breakers/?debug#old',code));assert.equal(url.pathname,'/rift-breakers/');assert.equal(url.search,'');assert.equal(new URLSearchParams(url.hash.slice(1)).get('room'),code);}assert.equal(roomCode('abcd-efgh 2345'),'ABCDEFGH2345');assert(!validRoomCode('<script>'));});

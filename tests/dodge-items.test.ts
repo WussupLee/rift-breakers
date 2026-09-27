@@ -1,17 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {DODGE} from '../game/dodge';
 import {Simulation} from '../game/simulation';
 import {defaultConfig,emptyInput} from '../game/data';
 const setup=()=>{const s=new Simulation({...structuredClone(defaultConfig),items:'off'});s.countdown=0;return s;};
 const step=(s:Simulation,input={})=>s.step(emptyInput(),[{...emptyInput(),...input},emptyInput()]);
 
-test('spot and aerial dodges protect for exactly 12 ticks; dash does not',()=>{
+test('spot, aerial and moving ground dodges protect for the full declared window',()=>{
  for(const airborne of [false,true]){const s=setup(),a=s.actors[0];if(airborne){a.grounded=false;a.y=350;}
-  step(s,{dodge:true,x:airborne?1:0});assert.equal(a.dodgeTime,12);
-  for(let n=12;n>0;n--){assert.equal(a.dodgeTime,n);assert.equal(s.canHit(1,a),false);assert.equal(s.canHit(1,a,true),false);step(s);}
+  step(s,{dodge:true,x:airborne?1:0});assert.equal(a.dodgeTime,DODGE.invulnerableTicks);
+  for(let n=DODGE.invulnerableTicks;n>0;n--){assert.equal(a.dodgeTime,n);assert.equal(s.canHit(1,a),false);assert.equal(s.canHit(1,a,true),false);step(s);}
   assert.equal(s.canHit(1,a),true);
  }
- const s=setup(),a=s.actors[0];step(s,{dodge:true,x:1});assert.equal(a.dodgeTime,0);assert.equal(s.canHit(1,a),true);
+ const s=setup(),a=s.actors[0];step(s,{dodge:true,x:1});assert.equal(a.dodgeTime,DODGE.invulnerableTicks);assert.equal(s.canHit(1,a),false);
 });
 test('gravity cancel ends protection immediately',()=>{const s=setup(),a=s.actors[0];a.grounded=false;a.y=350;step(s,{dodge:true});step(s,{light:true});assert.equal(a.move?.id,'nl');assert.equal(s.canHit(1,a),true);});
 test('resting items auto-collect for humans and CPUs, and throw releases ownership',()=>{

@@ -54,6 +54,7 @@ export function attackCue(id:FighterId,move?:MoveId):AudioCue {
 export function eventCues(e:CombatEvent,id:FighterId):AudioCue[]{
  if(e.cue)return [e.cue];
  switch(e.kind){
+ case 'evade':return []; // The initiating dodge already plays its recorded cue.
  case 'attack':return [attackCue(id,e.move)];
  case 'hit':return [e.power>=11?'heavyHit':'hit',...(e.power>=17?['launch'] as AudioCue[]:[]),(id+'Voice') as AudioCue,...(e.power>=14?['gasp'] as AudioCue[]:[])];
  case 'ko':return ['ko','cheer'];
@@ -81,4 +82,3 @@ export class CueGate{
  }
  reset(){this.last.clear();this.crowdUntil=0;this.crowdPriority=0;}
 }
-

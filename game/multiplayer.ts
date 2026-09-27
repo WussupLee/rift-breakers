@@ -65,7 +65,7 @@ export class MultiplayerRoom{
   connection.on('close',()=>this.depart(connection.peer));connection.on('error',()=>{connection.close();this.depart(connection.peer);});
  }
  private receiveGuest(connection:DataConnection,data:unknown){
-  const parsed=fromGuest.safeParse(data);if(!parsed.success)return;const message=parsed.data;this.seen.set(connection.peer,performance.now());
+  const parsed=fromGuest.safeParse(data);if(!parsed.success){if(data&&typeof data==='object'&&'type' in data&&data.type==='hello'&&'version' in data&&typeof data.version==='number'&&data.version!==NETWORK_VERSION)this.reject(connection,'Game version changed. Refresh on every device, then create a new room.');return;}const message=parsed.data;this.seen.set(connection.peer,performance.now());
   if(message.type==='hello'){
    if(this.state.members.some(m=>m.id===connection.peer))return;
    if(this.state.phase!=='lobby'){this.reject(connection,'This match has started. Ask the host to return to the lobby.');return;}

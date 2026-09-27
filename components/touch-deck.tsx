@@ -2,18 +2,19 @@
 import {useEffect,useRef,type CSSProperties,type PointerEvent,type RefObject} from 'react';
 import {ChevronUp,ChevronDown,ChevronLeft,ChevronRight} from 'lucide-react';
 import type {GameBridge} from '@/game/scene';
+import type {DodgeReadout} from '@/game/dodge';
 import type {Settings} from '@/game/data';
 import {TouchHaptics} from '@/game/haptics';
 
-function Action({action,label,sub,bridge,onTap,disabled=false}:{action:string;label:string;sub:string;bridge:RefObject<GameBridge|null>;disabled?:boolean;onTap:()=>void}) {
+function Action({action,label,sub,bridge,onTap,disabled=false,status}:{status?:DodgeReadout;action:string;label:string;sub:string;bridge:RefObject<GameBridge|null>;disabled?:boolean;onTap:()=>void}) {
   const pointers=useRef(new Set<number>()),button=useRef<HTMLButtonElement>(null);
   useEffect(()=>{if(disabled){for(const id of pointers.current)bridge.current?.input?.release(id);pointers.current.clear();button.current?.classList.remove('pressed');}},[disabled,bridge]);
   useEffect(()=>()=>{for(const id of pointers.current)bridge.current?.input?.release(id);pointers.current.clear();},[bridge]);
   const release=(event:PointerEvent<HTMLButtonElement>)=>{pointers.current.delete(event.pointerId);bridge.current?.input?.release(event.pointerId);event.currentTarget.classList.remove('pressed');};
-  return <button ref={button} disabled={disabled} title={action==='item'?(disabled?'Walk over a resting item to pick it up':'Throw held item'):sub} className={`touch-button ${action}`} aria-label={`${label} ${sub}`} onContextMenu={e=>e.preventDefault()} onPointerDown={e=>{e.preventDefault();if(disabled||(action==='item'&&bridge.current?.sim?.actors[bridge.current?.localIndex??0]?.held==null))return;if(e.pointerType==='touch')onTap();pointers.current.add(e.pointerId);e.currentTarget.setPointerCapture(e.pointerId);bridge.current?.input?.press(e.pointerId,action);void bridge.current?.audio?.start();e.currentTarget.classList.add('pressed');}} onPointerUp={release} onPointerCancel={release} onLostPointerCapture={release}><b>{label}</b><small>{sub}</small></button>;
+  return <button ref={button} disabled={disabled} title={action==='item'?(disabled?'Walk over a resting item to pick it up':'Throw held item'):sub} data-dodge-state={status?.state} className={`touch-button ${action}`} aria-description={status?.description} aria-label={`${label} ${sub}`} onContextMenu={e=>e.preventDefault()} onPointerDown={e=>{e.preventDefault();if(disabled||(action==='item'&&bridge.current?.sim?.actors[bridge.current?.localIndex??0]?.held==null))return;if(e.pointerType==='touch')onTap();pointers.current.add(e.pointerId);e.currentTarget.setPointerCapture(e.pointerId);bridge.current?.input?.press(e.pointerId,action);void bridge.current?.audio?.start();e.currentTarget.classList.add('pressed');}} onPointerUp={release} onPointerCancel={release} onLostPointerCapture={release}><b>{label}</b><small>{sub}</small>{status&&<span className="dodge-readout" aria-hidden="true">{status.label}</span>}</button>;
 }
 
-export function TouchDeck({bridge,settings,held,onPause,onGuide}:{held:number|null;bridge:RefObject<GameBridge|null>;settings:Settings;onPause:()=>void;onGuide:()=>void}) {
+export function TouchDeck({bridge,settings,held,dodge,onPause,onGuide}:{dodge?:DodgeReadout;held:number|null;bridge:RefObject<GameBridge|null>;settings:Settings;onPause:()=>void;onGuide:()=>void}) {
   const haptics=useRef(new TouchHaptics());
   const tap=()=>{haptics.current.tap(settings.haptics);};
   function move(event:PointerEvent<HTMLDivElement>) {
@@ -31,7 +32,7 @@ export function TouchDeck({bridge,settings,held,onPause,onGuide}:{held:number|nu
         <span className="dpad-up"><ChevronUp/></span><span className="dpad-left"><ChevronLeft/></span><span className="dpad-middle"/><span className="dpad-right"><ChevronRight/></span><span className="dpad-down"><ChevronDown/></span>
       </div>
       <div className="action-buttons" aria-label="Combat buttons">
-        <Action onTap={tap} bridge={bridge} action="dodge" label="Y" sub="DODGE"/>
+        <Action onTap={tap} bridge={bridge} action="dodge" label="Y" sub="DODGE" status={dodge}/>
         <Action onTap={tap} bridge={bridge} action="jump" label="X" sub="JUMP"/>
         <Action onTap={tap} bridge={bridge} action="light" label="B" sub="LIGHT"/>
         <Action onTap={tap} bridge={bridge} action="heavy" label="A" sub="HEAVY"/>
