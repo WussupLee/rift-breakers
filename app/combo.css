@@ -1,0 +1,5 @@
+.combo-status{position:absolute;bottom:12px;left:50%;translate:-50% 0;z-index:4;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 14px;max-width:calc(100% - 24px);border:1px solid #ff7bbb99;background:#080f20ed;border-radius:5px;white-space:nowrap;color:#fff;box-shadow:0 2px 12px #0005}
+.combo-status strong{font-size:14px;font-weight:900;letter-spacing:1px;line-height:1.1}
+.combo-status span{font-size:10px;font-weight:800;color:#ff9ccb;letter-spacing:.7px;line-height:1.2}
+.combo-status[data-step="3"]{border-color:#ffe45b}.combo-status[data-step="3"] span{color:#ffe45b}
+@media(max-height:550px){.combo-status{bottom:6px;padding:4px 10px}.combo-status strong{font-size:12px}.combo-status span{font-size:9px}}

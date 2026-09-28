@@ -12,7 +12,7 @@ const text=[
 '',
 '## Complete cue list',
 '',
-'Gain is before the SFX master and voice/crowd submix. Variants rotate; no synthesized fallback or generated voice is used. Every one of the 44 moves uses its actual activation event, with the move ID carried to network guests.',
+'Gain is before the SFX master and voice/crowd submix. Variants rotate; no synthesized fallback or generated voice is used. Every one of the 52 moves uses its actual activation event, with the move ID carried to network guests.',
 '',
 '| Cue | Action | Sample file(s) | Gain | Bus | Minimum interval |',
 '| --- | --- | --- | --- | --- | --- |',
@@ -46,7 +46,6 @@ const text=[
 '',
 '## Verification / listening limits',
 '',
-'Automated checks cover hashes, source records, measured levels, cue coverage for all 44 moves, cooldowns, mute/submix behavior, network metadata, browser decoding, gesture unlock, pause/resume, rematch, and a four-fighter full-volume mix stress test. These do not replace listening on physical phone speakers or headphones. Settings → Sound Check exposes every runtime cue and the fight music for final listening and personal balance adjustments.',
+'Automated checks cover hashes, source records, measured levels, cue coverage for all 52 moves, cooldowns, mute/submix behavior, network metadata, browser decoding, gesture unlock, pause/resume, rematch, and a four-fighter full-volume mix stress test. These do not replace listening on physical phone speakers or headphones. Settings → Sound Check exposes every runtime cue and the fight music for final listening and personal balance adjustments.',
 ''];
 writeFileSync('public/assets/audio/SOUND-DESIGN.md',text.join('\n')+'\n');
-

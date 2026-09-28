@@ -1,22 +1,24 @@
+import {tuneMoves} from './move-tuning';
 import type {FeelMode,FeelPreference} from './feel';
 export type FighterId = 'kairo' | 'regent' | 'vexa' | 'omen';
 export type Difficulty = 'easy' | 'medium' | 'hard';
-export type MoveId = 'nl'|'sl'|'dl'|'nh'|'sh'|'dh'|'na'|'sa'|'da'|'rec'|'gp';
+export type MoveId = 'nl'|'sl'|'dl'|'nh'|'sh'|'dh'|'na'|'sa'|'da'|'rec'|'gp'|'l2'|'l3';
 export type Animation = 'idle'|'run'|'jump'|'fall'|'attack1'|'attack2'|'attack3'|'hurt'|'death';
 export interface InputFrame { x:number; y:number; jump:boolean; light:boolean; heavy:boolean; dodge:boolean; item:boolean }
 export const emptyInput = ():InputFrame => ({x:0,y:0,jump:false,light:false,heavy:false,dodge:false,item:false});
 export interface HitShape { x:number; y:number; radius:number; endX?:number; endY?:number }
-export interface MoveDefinition { id:MoveId; name:string; animation:Animation; startup:number; active:number; recovery:number; damage:number; base:number; scaling:number; angle:number; hitbox:HitShape; impulse:number; armor:boolean; projectile?:'bolt'|'sigil'|'beam'|'mine'|'shard'; charge?:boolean }
+export interface MoveDefinition { id:MoveId; name:string; animation:Animation; startup:number; active:number; recovery:number; damage:number; base:number; scaling:number; angle:number; hitbox:HitShape; impulse:number; armor:boolean; projectile?:'bolt'|'sigil'|'beam'|'mine'|'shard'|'crystal'; charge?:boolean; lift?:number; chainStep?:1|2|3; chain?:{next:MoveId;cancelRecovery:number;heavyBranch?:boolean}; projectileStats?:{speed?:number;vy?:number;radius?:number;life?:number;arm?:number;offsetX?:number;offsetY?:number} }
 export interface FighterDefinition { id:FighterId; name:string; title:string; role:string; color:string; speed:number; acceleration:number; jump:number; gravity:number; weight:number; power:number; height:number; width:number; source:string; bio:string; moves:Record<MoveId,MoveDefinition> }
 const names:Record<FighterId,string[]>={kairo:['Jab string','Advancing palm','Low sweep','Rising uppercut','Scarf breaker','Orbit spin','Aerial kick','Flying punch','Heel dive','Corkscrew','Meteor fist'],regent:['Hilt jab','Royal sweep','Low scoop','Rising cleave','Iron decree','Ground slam','Royal orbit','Greatsword arc','Blade plunge','Crown ascent','Kingsfall'],vexa:['Haft combo','Dash thrust','Sliding sweep','Thorn rise','Vault cleave','Low cyclone','Pole spin','Forward poke','Downward hook','Sky vault','Thornfall'],omen:['Orb burst','Staff bolt','Floor sigil','Anti-air crystal','Rift beam','Rift mine','Orbiting orb','Forward burst','Downward shard','Rift shift','Void column']};
 const ids:MoveId[]=['nl','sl','dl','nh','sh','dh','na','sa','da','rec','gp'];
 function moves(id:FighterId):Record<MoveId,MoveDefinition>{
   const heavy=id==='regent',fast=id==='vexa',mage=id==='omen';
-  return Object.fromEntries(ids.map((key,i)=>{
+  const base=Object.fromEntries(ids.map((key,i)=>{
     const strong=i>=3&&i<=5||i>=9, up=key==='nh'||key==='rec',down=key==='da'||key==='gp',low=key==='dl'||key==='dh';
     const projectile=mage?({sl:'bolt',dl:'sigil',sh:'beam',dh:'mine',da:'shard'} as const)[key as 'sl']:undefined;
     return [key,{id:key,name:names[id][i],animation:(i%3===0?'attack1':i%3===1?'attack2':'attack3'),startup:(strong?16:6)+(heavy?3:fast?-2:0),active:strong?8:5,recovery:(strong?28:15)+(heavy?5:fast?-2:0),damage:(strong?17:7)+(heavy?3:fast?-1:0),base:strong?6.5:3.2,scaling:strong?.087:.047,angle:down?75:up?-86:key==='dl'?-72:key==='dh'?-42:-27,hitbox:{x:up?4:low?33:39,y:up?-62:down?5:low?-9:-32,radius:strong?39:25,endX:up?4:low?68:65,endY:up?-92:down?38:low?-9:-32},impulse:key==='sl'?5:key==='sh'?7:0,armor:heavy&&key==='sh',projectile,charge:key==='sh'} satisfies MoveDefinition];
   })) as Record<MoveId,MoveDefinition>;
+  return tuneMoves(id,base);
 }
 export const FIGHTERS:FighterDefinition[]=[
  {id:'kairo',name:'Kairo Venn',title:'THE RIFT WALKER',role:'All-rounder',color:'#27e8ed',speed:5.6,acceleration:.95,jump:12.8,gravity:.54,weight:1,power:1,height:58,width:25,source:'martial-hero-3',bio:'A wandering fighter. A world between worlds. Quick strings, balanced power, and a rising corkscrew to find your way home.',moves:moves('kairo')},

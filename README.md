@@ -22,7 +22,7 @@ Y / L grants **16 protected simulation frames** to every fighter: standing, movi
 
 A translucent white fighter, steady white halo and shrinking cyan arc show the actual protected window; optional white flashes respect the reduced-flashes setting. `EVADED` appears only when a hostile hitbox actually intersects during protection, once per dodge. Mobile Y displays READY / SAFE / cooldown seconds / BUSY. Ground cooldown remains 45 ticks; air cooldown remains 130 ticks (landing caps the remainder at 45). Holding dodge does not repeat it. Attack recovery and hitstun cannot be canceled into a dodge; late taps can use the existing input buffer. A gravity-cancel attack ends protection immediately, and lingering attacks can hit after protection expires. Dodging does not protect against falling outside the blast zones.
 
-Multiplayer protocol 2 carries confirmed evades; everyone should refresh before joining a room. Tests exercise all four fighters and dodge directions, every one of the 44 attacks facing both ways against each defender, thrown items/blasts, exact expiry, cooldowns and touch/visual feedback.
+Multiplayer protocol 3 carries confirmed evades; everyone should refresh before joining a room. Tests exercise all four fighters and dodge directions, every one of the 52 attacks facing both ways against each defender, thrown items/blasts, exact expiry, cooldowns and touch/visual feedback.
 
 ### Camera and recovery cues
 
@@ -32,6 +32,23 @@ A yellow **YOU / RECOVER** arrow points back toward the platform when you are of
 
 `node scripts/camera-qa.mjs` checks Chromium/WebKit portrait, compact portrait, landscape and desktop layouts against the static build. Unit fixtures cover anchoring during zoom, all four blast limits, recovery directions, four-player marker separation and local-player ownership.
 
+### Light chains and character-specific heavies
+
+On the ground, tap **B → B → B** (keyboard **J → J → J**) for three different light strikes. Tap again as the current strike comes out; only one follow-up is queued. Neutral lights chain for everyone; side lights also chain for Kairo, Regent and Vexa, while Omen retains his ranged bolt. Down and aerial lights remain separate attacks.
+
+| Fighter | Three-hit neutral light chain | Neutral / side / down heavy |
+| --- | --- | --- |
+| Kairo | Quick jab → Cross punch → Rift uppercut | Skybreaker rising uppercut / Scarf breaker lunge / Orbit breaker spin |
+| Regent-9 | Hilt check → Backhand cleave → Crown sentence | Execution arc overhead / armored Iron decree / two-sided Throne quake |
+| Vexa | Haft snap → Pursuit thrust → Thorn hook | Pole-vault rise / leaping Vault cleave / Low cyclone launcher |
+| Omen | Spark pulse → Rift lance → Null expulsion | rising Rift crystal / chargeable piercing Rift beam / delayed Event horizon mine |
+
+**B → B → A** (J → J → K) branches from the second strike into a directional heavy. Connected lights can cancel into a follow-up after their active frames plus 1–4 recovery ticks, depending on fighter. Misses pay full recovery before a queued attack starts. Every next attack still has its own startup and one-hit-per-target rule. Finishers cannot chain-cancel, holding Light does not repeat, and hitstun, leaving the ground or a KO clears queued follow-ups. Spacing, damage, DI and dodges can break a string; this is not a guaranteed hit-lock.
+
+The CHAIN readout shows sequence position, not a claimed combo hit count, and confirms LIGHT / HEAVY QUEUED. CPU difficulty changes its choice/reaction frequency, not legal timing. Lunges and vaults now begin on activation, not during startup. Omen's projectile charge, original facing and move identity survive travel and network replication. Attack effects follow the authored reach; existing CC0 sprites and recorded audio are reused.
+
+`tests/combos.test.ts` covers all fighter matchups, both facings and both feel profiles; touch and network scripts cover actual button taps and a guest chain replicated to all four clients. Everyone must refresh for protocol 3 before joining a room.
+
 ## Roster
 | Fighter | Archetype | Art |
 | --- | --- | --- |
@@ -40,7 +57,7 @@ A yellow **YOU / RECOVER** arrow points back toward the platform when you are of
 | Vexa Thorn | Fast polearm rushdown | Huntress |
 | Omen Null | Projectile/trap zoner | Evil Wizard 2 |
 
-Character art is by LuizMelo, CC0. Sound and planetary art by Kenney, CC0. Source URLs and unmodified license records are in [the asset register](public/assets/SOURCES.md). Original sprite colors are preserved; attack animations are retimed across directional families, not falsely presented as 44 bespoke sprite sequences.
+Character art is by LuizMelo, CC0. Sound and planetary art by Kenney, CC0. Source URLs and unmodified license records are in [the asset register](public/assets/SOURCES.md). Original sprite colors are preserved; attack animations are retimed across directional families, 52 authored moves reuse the nine provided animation states per fighter.
 
 ## Development
 Node 24 and pnpm 11.25.0:
@@ -74,7 +91,7 @@ Set `QA_URL` to test a deployed URL. Append `?debug` to expose the simulation br
 ## Scope and verification
 This is a playable first release, not a claim of tournament-level balance or flawless physical-device compatibility. It supports one human plus 1–3 CPUs, stock/timed/teams, three difficulty levels, three items, and rematches.
 
-Automated coverage includes the 44 moves facing both ways, startup/one-hit enforcement, capsule sweeps, input buffering, jumps/coyote/drop-through, dodge/recovery, DI limits, damage, team filtering, sudden death, items and seeded AI soaks. Browser automation covers desktop setup/combat/pause/results/rematch and portrait multitouch across HUD rerenders.
+Automated coverage includes the 52 moves facing both ways, startup/one-hit enforcement, capsule sweeps, input buffering, jumps/coyote/drop-through, dodge/recovery, DI limits, damage, team filtering, sudden death, items and seeded AI soaks. Browser automation covers desktop setup/combat/pause/results/rematch and portrait multitouch across HUD rerenders.
 
 Physical iPhone/Android touch feel, Safari/Firefox on real devices, accessibility with assistive technology, exhaustive visual frame-by-frame hitbox QA, long-session memory profiling, and competitive balance remain release-testing work. Attack arcs are gameplay geometry, not per-pixel collisions; some move names describe intended fighting identity rather than unique multi-hit combos. Animation-state transforms and reused attack families are intentional first-release simplifications.
 

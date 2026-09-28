@@ -57,7 +57,7 @@ test('late recovery dodge input buffers, protection begins only when action beco
 });
 test('network snapshot preserves the exact active window and confirmed evade event',()=>{
  const s=setup(),a=s.actors[0];step(s,{x:1,dodge:true});s.evade(a);
- const state=snapshotSchema.parse(captureSnapshot(s,s.events,false)),guest=setup();assert(applySnapshot(guest,state));assert.equal(guest.actors[0].dodgeTime,16);assert.equal(guest.canHit(1,guest.actors[0]),false);assert.equal(state.events.filter(e=>e.kind==='evade').length,1);assert.equal(NETWORK_VERSION,2);
+ const state=snapshotSchema.parse(captureSnapshot(s,s.events,false)),guest=setup();assert(applySnapshot(guest,state));assert.equal(guest.actors[0].dodgeTime,16);assert.equal(guest.canHit(1,guest.actors[0]),false);assert.equal(state.events.filter(e=>e.kind==='evade').length,1);assert.equal(NETWORK_VERSION,3);
 });
 test('cooldown readout uses real match pace, and READY never promises a dodge while busy',()=>{
  const s=setup(),a=s.actors[0];assert.equal(dodgeReadout(a,'classic').label,'READY');a.dodgeCD=51;assert.equal(dodgeReadout(a,'relaxed').label,'1.0s');a.dodgeCD=0;a.stun=5;assert.equal(dodgeReadout(a,'classic').label,'BUSY');
