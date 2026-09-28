@@ -24,6 +24,14 @@ A translucent white fighter, steady white halo and shrinking cyan arc show the a
 
 Multiplayer protocol 2 carries confirmed evades; everyone should refresh before joining a room. Tests exercise all four fighters and dodge directions, every one of the 44 attacks facing both ways against each defender, thrown items/blasts, exact expiry, cooldowns and touch/visual feedback.
 
+### Camera and recovery cues
+
+The camera stays centered on the main platform and keeps its deck at a fixed screen height. It can widen by at most 16% during offstage action, but no longer follows a falling fighter into the abyss. Both landing surfaces stay in view. Gold endcaps show the exact walkable ledges.
+
+A yellow **YOU / RECOVER** arrow points back toward the platform when you are offstage. Fighters outside the view get named, screen-clamped markers; your own marker takes priority. Red **KO RISK** warns within 150 world units of a real blast limit, or earlier when launch velocity predicts imminent danger. Dashed **KO LIMIT** lines show the real elimination boundary wherever it intersects the view, with shading beyond. A screen edge is not itself a knockout boundary. Warnings are steady (no required flashes), remain pixel-sized during zoom, and disappear during respawn/elimination. Combat, recovery resources and network physics are unchanged.
+
+`node scripts/camera-qa.mjs` checks Chromium/WebKit portrait, compact portrait, landscape and desktop layouts against the static build. Unit fixtures cover anchoring during zoom, all four blast limits, recovery directions, four-player marker separation and local-player ownership.
+
 ## Roster
 | Fighter | Archetype | Art |
 | --- | --- | --- |

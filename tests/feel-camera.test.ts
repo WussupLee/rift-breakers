@@ -2,7 +2,7 @@ import test from 'node:test';import assert from 'node:assert/strict';
 import {Simulation} from '../game/simulation';
 import {FIGHTERS,defaultConfig,emptyInput} from '../game/data';
 import {FEEL,resolveFeel,scaledDelta,FIXED_STEP_MS,type FeelMode} from '../game/feel';
-import {frameFighters,easeCamera} from '../game/camera';
+import {frameFighters,easeCamera,anchorCamera,worldToScreen,cameraHud} from '../game/camera';
 import {TouchHaptics} from '../game/haptics';
 const setup=(feel:FeelMode)=>{const s=new Simulation({...structuredClone(defaultConfig),feel,items:'off'});s.countdown=0;return s;};
 const step=(s:Simulation,input={})=>s.step(emptyInput(),[{...emptyInput(),...input},emptyInput()]);
@@ -24,8 +24,29 @@ test('fall assistance does not soften hitstun launch physics or remove fast-fall
 });
 test('all fighters, including CPUs, receive the same air assistance',()=>{const s=setup('relaxed');for(const a of s.actors){a.slot.fighter='kairo';a.grounded=false;a.y=200;a.vy=3;}s.step(emptyInput(),s.actors.map(()=>emptyInput()));assert.equal(s.actors[0].vy,s.actors[1].vy);});
 test('relaxed four-fighter match stays finite and reaches a result',()=>{const s=new Simulation({...defaultConfig,feel:'relaxed',mode:'timed',seconds:60,items:'normal',slots:FIGHTERS.map((f,i)=>({fighter:f.id,difficulty:i===0?'hard':'medium',team:i%2}))});s.countdown=0;for(let i=0;i<8000&&!s.ended;i++){s.step(s.ai(s.actors[0]));for(const a of s.actors)assert(Number.isFinite(a.x+a.y+a.damage)&&a.airJumps>=0);}assert(s.ended);assert(s.actors.reduce((total,a)=>total+a.damageDone,0)>100);});
-test('camera zooms out and tracks vertical recovery, ignoring eliminated fighters',()=>{const s=setup('classic');const close=frameFighters(s.actors,390,592);s.actors[0].x=-100;s.actors[1].x=1100;const wide=frameFighters(s.actors,390,592);assert(wide.zoom<close.zoom);s.actors[0].x=330;s.actors[1].x=670;s.actors[0].y=960;const low=frameFighters(s.actors,390,592);assert(low.y>close.y);s.actors[0].out=true;const out=frameFighters(s.actors,390,592);s.actors[0].y=-500;assert.deepEqual(frameFighters(s.actors,390,592),out);});
-test('camera target keeps on-stage and offstage bodies clear of HUD and viewport edges',()=>{for(const [w,h] of [[390,592],[320,256],[1280,720]]){const s=setup('classic');s.actors[0].x=-100;s.actors[0].y=940;s.actors[1].x=1080;s.actors[1].y=200;const c=frameFighters(s.actors,w,h);for(const a of s.actors){const x=(a.x-c.x)*c.zoom+w/2,y=(a.y-c.y)*c.zoom+h/2;assert(x>0&&x<w);assert(y>80&&y<h);}}});
+test('camera is stage-anchored with at most 16 percent zoom-out and ignores eliminated fighters',()=>{
+ const s=setup('classic'),close=frameFighters(s.actors,390,592);
+ s.actors[0].x=-100;s.actors[1].x=1100;const wide=frameFighters(s.actors,390,592);
+ assert.equal(wide.x,500);assert(wide.zoom<close.zoom);assert(wide.zoom>=close.zoom*.84-1e-10);
+ s.actors[0].x=-10000;s.actors[0].y=10000;s.actors[1].x=10000;
+ assert.deepEqual(frameFighters(s.actors,390,592),wide);
+ s.actors[0].out=true;s.actors[1].respawn=90;
+ assert.deepEqual(frameFighters(s.actors,390,592),close);
+});
+test('both platforms remain visible and the deck never drifts vertically, including during easing',()=>{
+ for(const [w,h] of [[390,592],[320,256],[1280,720],[524,390],[160,120]]){
+  const s=setup('classic'),c=frameFighters(s.actors,w,h),anchor=worldToScreen(500,610,c,w,h);
+  s.actors[0].x=-100;s.actors[0].y=940;s.actors[1].x=1080;s.actors[1].y=200;
+  const target=frameFighters(s.actors,w,h);let current=c;
+  for(let i=0;i<60;i++){
+   current=anchorCamera(easeCamera(current,target,16.67).zoom,w,h);
+   assert.equal(current.x,500);assert(Math.abs(worldToScreen(500,610,current,w,h).y-anchor.y)<1e-8);
+   for(const [x,y] of [[160,610],[840,610],[380,425],[620,425]]){
+    const p=worldToScreen(x,y,current,w,h);assert(p.x>0&&p.x<w);assert(p.y>=cameraHud(w,h)&&p.y<h);
+   }
+  }
+ }
+});
 test('camera easing is frame-rate independent and zooms out faster than in',()=>{const start={x:500,y:470,zoom:.5},target={x:600,y:600,zoom:.3};let a=start,b=start;for(let i=0;i<60;i++)a=easeCamera(a,target,1000/60);for(let i=0;i<120;i++)b=easeCamera(b,target,1000/120);assert(Math.abs(a.x-b.x)<1e-8&&Math.abs(a.zoom-b.zoom)<1e-8);const out=easeCamera(start,target,16).zoom,inward=easeCamera(start,{...target,zoom:.7},16).zoom;assert(.5-out>inward-.5);});
 test('haptic requests are subtle, opt-out, rate-limited, and safe when unsupported',()=>{
  const calls:number[]=[];const previous=Object.getOwnPropertyDescriptor(navigator,'vibrate');

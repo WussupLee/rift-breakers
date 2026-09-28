@@ -4,7 +4,8 @@ import {applySnapshot,type NetSnapshot} from './network-protocol';
 import {DODGE} from './dodge';
 import {SpaceStation} from './environment';
 import {FEEL,resolveFeel,scaledDelta,FIXED_STEP_MS} from './feel';
-import {frameFighters,easeCamera,type CameraState} from './camera';
+import {BoundaryOverlay} from './boundary-overlay';
+import {frameFighters,easeCamera,anchorCamera,cameraHud,type CameraState} from './camera';
 import {FIGHTERS,STAGE,fighter,asset,damageColor,ITEMS,type Settings,type MatchConfig,type Animation} from './data';
 import {Simulation,type Actor,type CombatEvent} from './simulation';import {InputController} from './input';import {GameAudio} from './audio';
 type Atlas={width:number;height:number;frames:number;bounds:{x:number;y:number;w:number;h:number}};
@@ -12,10 +13,10 @@ type Manifest=Record<string,Record<string,Atlas>>;
 export interface GameBridge {network?:MultiplayerRoom;localIndex?:number;sim:Simulation|null;input:InputController|null;paused:boolean;debug:boolean;settings:Settings;onUpdate:(sim:Simulation)=>void;onReady:()=>void;onError:(message:string)=>void;onPause:()=>void;audio:GameAudio|null}
 export function launchGame(parent:HTMLElement,config:MatchConfig,bridge:GameBridge){
  class ArenaScene extends Phaser.Scene {
-  sim!:Simulation;acc=0;lastNetworkState:NetSnapshot|null=null;manifest!:Manifest;sprites:Phaser.GameObjects.Sprite[]=[];labels:Phaser.GameObjects.Text[]=[];gfx!:Phaser.GameObjects.Graphics;fx!:Phaser.GameObjects.Graphics;station!:SpaceStation;debugText!:Phaser.GameObjects.Text;particles:{x:number;y:number;vx:number;vy:number;life:number;max:number;size:number;color:number}[]=[];rings:{x:number;y:number;life:number;max:number;color:number;size:number}[]=[];cameraState:CameraState={x:500,y:470,zoom:0};cameraWidth=0;cameraHeight=0;touchDevice=false;timeScale=1;frameAvg=16;lastEmit=-1;lastHeld:number|null=null;
+  sim!:Simulation;acc=0;lastNetworkState:NetSnapshot|null=null;manifest!:Manifest;sprites:Phaser.GameObjects.Sprite[]=[];labels:Phaser.GameObjects.Text[]=[];gfx!:Phaser.GameObjects.Graphics;fx!:Phaser.GameObjects.Graphics;station!:SpaceStation;boundaries!:BoundaryOverlay;hudInset=142;debugText!:Phaser.GameObjects.Text;particles:{x:number;y:number;vx:number;vy:number;life:number;max:number;size:number;color:number}[]=[];rings:{x:number;y:number;life:number;max:number;color:number;size:number}[]=[];cameraState:CameraState={x:500,y:470,zoom:0};cameraWidth=0;cameraHeight=0;touchDevice=false;timeScale=1;frameAvg=16;lastEmit=-1;lastHeld:number|null=null;
   constructor(){super('Arena');}
   preload(){SpaceStation.preload(this);this.load.json('manifest',asset('manifest.json'));this.load.once('filecomplete-json-manifest',(_k:string,_t:string,data:Manifest)=>{this.manifest=data;for(const f of FIGHTERS)for(const [anim,meta] of Object.entries(data[f.id]))this.load.spritesheet(`${f.id}-${anim}`,asset(`fighters/${f.id}/${anim}.png`),{frameWidth:meta.width,frameHeight:meta.height});});this.load.on('loaderror',()=>bridge.onError('A game asset could not load. Check your connection and retry.'));}
-  create(){this.touchDevice=window.matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0;this.sim=new Simulation({...config,feel:bridge.network?config.feel:resolveFeel(bridge.settings.gameFeel,this.touchDevice)});bridge.sim=this.sim;bridge.input=new InputController(bridge.settings,()=>bridge.onPause(),()=>{bridge.debug=!bridge.debug;});bridge.audio??=new GameAudio(bridge.settings);bridge.audio.beginMatch();bridge.input.onGesture=()=>{void bridge.audio?.start();};this.station=new SpaceStation(this);this.gfx=this.add.graphics();this.fx=this.add.graphics().setDepth(20);this.debugText=this.add.text(10,10,'',{fontFamily:'monospace',fontSize:'13px',color:'#ffffff',backgroundColor:'#000c'}).setScrollFactor(0).setDepth(100);
+  create(){this.touchDevice=window.matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0;this.sim=new Simulation({...config,feel:bridge.network?config.feel:resolveFeel(bridge.settings.gameFeel,this.touchDevice)});bridge.sim=this.sim;bridge.input=new InputController(bridge.settings,()=>bridge.onPause(),()=>{bridge.debug=!bridge.debug;});bridge.audio??=new GameAudio(bridge.settings);bridge.audio.beginMatch();bridge.input.onGesture=()=>{void bridge.audio?.start();};this.station=new SpaceStation(this);this.boundaries=new BoundaryOverlay(this);this.gfx=this.add.graphics();this.fx=this.add.graphics().setDepth(20);this.debugText=this.add.text(10,10,'',{fontFamily:'monospace',fontSize:'13px',color:'#ffffff',backgroundColor:'#000c'}).setScrollFactor(0).setDepth(100);
    for(const a of this.sim.actors){const def=fighter(a.slot.fighter);this.sprites.push(this.add.sprite(a.x,a.y,`${def.id}-idle`).setDepth(5));this.labels.push(this.add.text(0,0,a.id===0?'▼ YOU':`CPU ${a.id}`,{fontFamily:'monospace',fontSize:'13px',fontStyle:'bold',color:def.color}).setOrigin(.5,1).setDepth(8));}
    bridge.onReady();bridge.onUpdate(this.sim);bridge.network?.ready();
    if(new URLSearchParams(location.search).has('debug')){(window as unknown as {rift:unknown}).rift={simulation:this.sim,bridge,scene:this};}
@@ -46,9 +47,12 @@ export function launchGame(parent:HTMLElement,config:MatchConfig,bridge:GameBrid
   }
   renderWorld(alpha:number,dt:number){const sim=this.sim,g=this.gfx,fx=this.fx;g.clear();fx.clear();
    const cam=this.cameras.main,width=this.scale.width,height=this.scale.height;
-   const target=frameFighters(sim.actors,width,height);
+   const hudBounds=parent.parentElement?.querySelector('.match-hud')?.getBoundingClientRect();
+   this.hudInset=hudBounds?Math.min(height*.58,Math.max(60,hudBounds.bottom-parent.getBoundingClientRect().top+12)):cameraHud(width,height);
+   const target=frameFighters(sim.actors,width,height,this.hudInset);
    if(this.cameraWidth!==width||this.cameraHeight!==height){this.cameraState=target;this.cameraWidth=width;this.cameraHeight=height;}
    else if(!bridge.paused||bridge.network&&!bridge.network.hostPaused)this.cameraState=easeCamera(this.cameraState,target,dt*16.67);
+   this.cameraState=anchorCamera(this.cameraState.zoom,width,height,this.hudInset);
    cam.setZoom(this.cameraState.zoom);cam.centerOn(this.cameraState.x,this.cameraState.y);
    this.station.draw(sim.tick+(bridge.paused?0:alpha),cam.zoom,this.scale.width,this.scale.height,this.cameraState.x,this.cameraState.y);
    for(const a of sim.actors){const sprite=this.sprites[a.id],label=this.labels[a.id],def=fighter(a.slot.fighter);if(a.out||a.respawn){sprite.setVisible(false);label.setVisible(false);continue;}sprite.setVisible(true);label.setVisible(true);const x=a.px+(a.x-a.px)*alpha,y=a.py+(a.y-a.py)*alpha;
@@ -70,6 +74,7 @@ export function launchGame(parent:HTMLElement,config:MatchConfig,bridge:GameBrid
    for(const it of sim.items){const col=ITEMS[it.kind].color;g.fillStyle(col,.14);g.fillCircle(it.x,it.y,22);g.lineStyle(2,col,1);g.strokeCircle(it.x,it.y,12);g.fillStyle(col,1);if(it.kind==='repair'){g.fillRect(it.x-7,it.y-2,14,4);g.fillRect(it.x-2,it.y-7,4,14);}else if(it.kind==='spike'){g.fillTriangle(it.x,it.y-9,it.x-8,it.y+7,it.x+8,it.y+7);}else {g.fillCircle(it.x,it.y,7);g.lineStyle(2,0xffffff,it.fuse>0&&sim.tick%12<6?1:.3);g.lineBetween(it.x+4,it.y-6,it.x+10,it.y-13);}}
    for(const p of this.particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.98;p.vy+=.035*dt;fx.fillStyle(p.color,Math.max(0,p.life/p.max)*.7);fx.fillRect(p.x,p.y,p.size,p.size*.55);}this.particles=this.particles.filter(p=>p.life>0).slice(-250);
    for(const r of this.rings){r.life-=dt;const t=1-r.life/r.max;fx.lineStyle(2,r.color,Math.max(0,1-t));fx.strokeCircle(r.x,r.y,r.size*t);if(r.size>100){for(let i=0;i<6;i++){fx.fillStyle([0x27e8ed,0xff58b1,0xffe45b][i%3],(1-t)*.65);fx.fillRect(r.x-r.size+t*200+i*9,r.y+(i-3)*25,r.size*2*(1-t),4+i);}}}this.rings=this.rings.filter(r=>r.life>0);
+   this.boundaries.draw(sim.actors,bridge.localIndex??0,this.cameraState,width,height,this.hudInset);
    this.debugText.setVisible(bridge.debug);if(bridge.debug)this.debugText.setText([`60 Hz | tick ${sim.tick} | ${Math.round(1000/this.frameAvg)} FPS`,...sim.actors.map(a=>`${a.id} ${a.move?.id??(a.stun?'stun':'idle')} ${a.moveTick} J${a.airJumps} R${!a.recoveryUsed} D${a.dodgeCD} SAFE${a.dodgeTime} ${a.aiIntent}`)]);
   }
  }

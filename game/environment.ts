@@ -51,6 +51,11 @@ export class SpaceStation {
     for(const [i,p] of STAGE.platforms.entries()){
       // Exact collision-top cue, independent of transparent sprite decoration.
       this.lights.fillStyle(i?0xff85c8:0x89fff0,.9);this.lights.fillRect(p.x,p.y,p.width,2);
+      if(i===0){
+        // Gold endcaps mark the exact walkable ledges, not the decorative hull.
+        this.lights.fillStyle(0xffe45b,1);
+        for(const edge of [p.x,p.x+p.width]){this.lights.fillRect(edge-3,p.y-10,6,24);this.lights.fillRect(edge-10,p.y-2,20,4);}
+      }
       const pulse=this.motion.matches?.4:.35+Math.sin(time*1.8+i)*.08;
       this.lights.fillStyle(0x66f8e4,pulse);
       for(const offset of [.18,.82])this.lights.fillRect(p.x+p.width*offset-6,p.y+(i?23:68),12,i?3:5);

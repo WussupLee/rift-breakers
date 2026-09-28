@@ -12,8 +12,8 @@ for(const [name,engine] of Object.entries({chromium,webkit})){
   assert.deepEqual(await page.evaluate(()=>[window.rift.simulation.config.feel,window.rift.scene.timeScale]),['relaxed',.85]);
   // Freeze simulation updates for camera fixtures, leaving the renderer running.
   await page.evaluate(()=>{const s=window.rift.simulation;s.ended=true;s.actors[0].x=450;s.actors[1].x=550;s.actors.forEach(a=>{a.y=610;a.vx=0;a.vy=0;a.px=a.x;a.py=a.y;});});await page.waitForTimeout(1100);const close=await page.evaluate(()=>({...window.rift.scene.cameraState}));
-  await page.evaluate(()=>{const a=window.rift.simulation.actors;a[0].x=-80;a[0].px=-80;a[1].x=1060;a[1].px=1060;});await page.waitForTimeout(550);const wide=await page.evaluate(()=>({...window.rift.scene.cameraState}));assert(wide.zoom<close.zoom*.8);
-  await page.evaluate(()=>{const a=window.rift.simulation.actors;a[0].x=250;a[0].px=250;a[0].y=920;a[0].py=920;a[1].x=670;a[1].px=670;});await page.waitForTimeout(700);assert(await page.evaluate(()=>window.rift.scene.cameraState.y)>close.y+100);await page.screenshot({path:`work/qa/feel/${name}-recovery-camera.png`});
+  await page.evaluate(()=>{const a=window.rift.simulation.actors;a[0].x=-80;a[0].px=-80;a[1].x=1060;a[1].px=1060;});await page.waitForTimeout(550);const wide=await page.evaluate(()=>({...window.rift.scene.cameraState}));assert.equal(wide.x,close.x);assert(wide.zoom<close.zoom&&wide.zoom>=close.zoom*.84-1e-6);
+  await page.evaluate(()=>{const a=window.rift.simulation.actors;a[0].x=250;a[0].px=250;a[0].y=920;a[0].py=920;a[1].x=670;a[1].px=670;});await page.waitForTimeout(700);assert(await page.evaluate(()=>window.rift.scene.boundaries.warnings.some(w=>w.local&&w.danger)));assert.equal(await page.evaluate(()=>window.rift.scene.cameraState.x),close.x);await page.screenshot({path:`work/qa/feel/${name}-recovery-camera.png`});
   // A long press sends one haptic request, never a repeating motor buzz.
   if(name==='chromium'){
    const cdp=await context.newCDPSession(page),r=await page.locator('.touch-button.jump').boundingBox();await page.evaluate(()=>{window.hapticCalls=[];});
@@ -24,6 +24,6 @@ for(const [name,engine] of Object.entries({chromium,webkit})){
   if(name==='chromium')await page.getByRole('switch',{name:'Touch vibration',exact:true}).click();
   await page.waitForFunction(()=>window.rift.simulation.config.feel==='classic');assert.equal(await page.evaluate(()=>window.rift.scene.timeScale),1);assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('rift-breakers-settings-v1')).gameFeel),'classic');
   await page.getByRole('button',{name:'Close',exact:true}).click();if(name==='chromium'){const n=await page.evaluate(()=>window.hapticCalls.length);await page.getByRole('button',{name:'X JUMP',exact:true}).tap();assert.equal(await page.evaluate(()=>window.hapticCalls.length),n);}
-  assert.deepEqual(errors,[]);console.log(`PASS ${name}: auto relaxed profile, migrated settings, live classic override, dynamic camera, haptic capability and touch behavior.`);await context.close();
+  assert.deepEqual(errors,[]);console.log(`PASS ${name}: auto relaxed profile, migrated settings, live classic override, stage-anchored camera and recovery warnings, haptic capability and touch behavior.`);await context.close();
  }finally{await browser.close();}
 }
