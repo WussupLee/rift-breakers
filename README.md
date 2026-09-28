@@ -16,6 +16,19 @@ Four fighters based on CC0 pixel packs with supplementary generated poses, two a
 - Three jumps total, one rising recovery, directional influence, wall contact recovery and increasing damage-to-knockback.
 - Settings persist on the device: audio, controls, touch size/opacity, shake, flashes and high-contrast labels.
 
+### Training mode
+
+Choose **TRAINING** beside LET'S PLAY on the fighter screen. Practice is local-only, uses the currently selected arena, and never ends from stocks or a timer. The normal movement, attacks, hitboxes, dodge cooldowns and recovery rules are unchanged.
+
+- Open **OPTIONS** in the training toolbar to switch your fighter or the dummy among all four characters.
+- Dummy behavior: Stand still, Keep jumping, Dodge when ready, or Fight back with Easy/Medium/Hard CPU difficulty.
+- Set the dummy's starting damage to 0/50/100/150/200%. Damage then builds normally; a dummy KO restores the selected starting value.
+- The reset-arrow button instantly restores positions/resources and clears attacks, projectiles, items and hit statistics. Changing a practice option also resets the session.
+- The bottom readout shows landed player hits, total damage dealt and last-hit damage/move. These are session totals, not a claim of a true uninterrupted combo.
+- OPTIONS includes a hitbox toggle and the move guide. The arena pauses while options are open. Pause → Return to fighters leaves practice and restores normal rules/CPU slots while retaining your chosen fighter.
+
+Both fighters have unlimited respawns. Offstage KOs still happen so recovery and launch distance can be practiced. Hit damage still includes normal repetition decay. Training doesn't modify multiplayer or its protocol. Coverage: `tests/training.test.ts` and `scripts/training-qa.mjs`.
+
 ### Dodge protection
 
 Y / L grants **16 protected simulation frames** to every fighter: standing, moving on the ground, or dodging in the air. This is about 0.27 seconds in Classic and 0.31 seconds in Relaxed/mobile. Moving-ground dodge is now an evasive dash, not the old unprotected dash. Protection starts immediately when a legal dodge activates and blocks melee, projectiles, thrown items and bomb blasts, including your own bomb.

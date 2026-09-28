@@ -20,7 +20,7 @@ function AnimatedFighter({id}:{id:FighterId}) {
   return <div ref={node} data-body-height={160*fit} className="preview-character" role="img" aria-label={`${fighter(id).name} standing on the selection platform`}><div className="idle-sprite" style={style}/></div>;
 }
 
-export function FighterSelect({id,onChoose,onContinue,onGuide}:{id:FighterId;onChoose:(id:FighterId)=>void;onContinue:()=>void;onGuide:()=>void}) {
+export function FighterSelect({id,onChoose,onContinue,onGuide,onTrain}:{id:FighterId;onChoose:(id:FighterId)=>void;onContinue:()=>void;onGuide:()=>void;onTrain:()=>void}) {
   const selected=fighter(id),index=FIGHTERS.findIndex(f=>f.id===id);
   const cycle=(direction:number)=>onChoose(FIGHTERS[(index+direction+FIGHTERS.length)%FIGHTERS.length].id);
   return <section className="roster-screen selection-screen" style={{'--fighter':selected.color} as CSSProperties}>
@@ -42,7 +42,7 @@ export function FighterSelect({id,onChoose,onContinue,onGuide}:{id:FighterId;onC
         <div className="selected-identity" aria-live="polite"><p className="eyebrow">{selected.title}</p><h2>{selected.name}</h2><p className="selected-bio">{selected.bio}</p></div>
         <div className="selection-stats">{[['Speed',selected.speed/7],['Power',selected.power/1.3],['Weight',selected.weight/1.4]].map(([label,value])=><div key={label}><span>{label}</span><meter min={0} max={1} value={Number(value)} aria-label={String(label)}/></div>)}</div>
         <div className="fighter-picker" role="group" aria-label="Choose a fighter">{FIGHTERS.map(f=><button key={f.id} className={`fighter-card fighter-option ${id===f.id?'selected':''}`} style={{'--fighter':f.color} as CSSProperties} onClick={()=>onChoose(f.id)} aria-label={`Select ${f.name}`} aria-pressed={id===f.id}><span className="selection-thumbnail"><img style={{height:`${(atlases[f.id].idle.bounds.h+8)/BODY_HEIGHT[f.id]*100}%`}} src={asset(`fighters/${f.id}/portrait.png`)} alt=""/></span><span>{f.name.split(' ')[0]}</span>{id===f.id&&<Check className="fighter-check" size={14}/>}</button>)}</div>
-        <div className="selection-actions"><button className="primary-button" onClick={onContinue}>LET’S PLAY <ArrowRight size={24}/></button><button className="text-button" onClick={onGuide}>How to play</button></div>
+        <div className="selection-actions"><button className="primary-button" onClick={onContinue}>LET’S PLAY <ArrowRight size={24}/></button><button className="training-entry" onClick={onTrain}>TRAINING</button><button className="text-button" onClick={onGuide}>How to play</button></div>
       </div>
     </div>
   </section>;
