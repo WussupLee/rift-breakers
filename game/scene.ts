@@ -76,7 +76,7 @@ export function launchGame(parent:HTMLElement,config:MatchConfig,bridge:GameBrid
    for(const it of sim.items){const col=ITEMS[it.kind].color;g.fillStyle(col,.14);g.fillCircle(it.x,it.y,22);g.lineStyle(2,col,1);g.strokeCircle(it.x,it.y,12);g.fillStyle(col,1);if(it.kind==='repair'){g.fillRect(it.x-7,it.y-2,14,4);g.fillRect(it.x-2,it.y-7,4,14);}else if(it.kind==='spike'){g.fillTriangle(it.x,it.y-9,it.x-8,it.y+7,it.x+8,it.y+7);}else {g.fillCircle(it.x,it.y,7);g.lineStyle(2,0xffffff,it.fuse>0&&sim.tick%12<6?1:.3);g.lineBetween(it.x+4,it.y-6,it.x+10,it.y-13);}}
    for(const p of this.particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.98;p.vy+=.035*dt;fx.fillStyle(p.color,Math.max(0,p.life/p.max)*.7);fx.fillRect(p.x,p.y,p.size,p.size*.55);}this.particles=this.particles.filter(p=>p.life>0).slice(-250);
    for(const r of this.rings){r.life-=dt;const t=1-r.life/r.max;fx.lineStyle(2,r.color,Math.max(0,1-t));fx.strokeCircle(r.x,r.y,r.size*t);if(r.size>100){for(let i=0;i<6;i++){fx.fillStyle([0x27e8ed,0xff58b1,0xffe45b][i%3],(1-t)*.65);fx.fillRect(r.x-r.size+t*200+i*9,r.y+(i-3)*25,r.size*2*(1-t),4+i);}}}this.rings=this.rings.filter(r=>r.life>0);
-   this.boundaries.draw(sim.actors,bridge.localIndex??0,this.cameraState,width,height,this.hudInset);
+   this.boundaries.draw(sim.actors,bridge.localIndex??0,this.cameraState,width,height,this.hudInset,this.sprites);
    this.debugText.setVisible(bridge.debug);if(bridge.debug)this.debugText.setText([`60 Hz | tick ${sim.tick} | ${Math.round(1000/this.frameAvg)} FPS`,...sim.actors.map(a=>`${a.id} ${a.move?.id??(a.stun?'stun':'idle')} ${a.moveTick} J${a.airJumps} R${!a.recoveryUsed} D${a.dodgeCD} SAFE${a.dodgeTime} ${a.aiIntent}`)]);
   }
  }
