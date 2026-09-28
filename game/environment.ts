@@ -1,5 +1,5 @@
 import type * as Phaser from 'phaser';
-import {STAGE,asset} from './data';
+import {STAGE,asset,type StageDefinition} from './data';
 
 /** Purely visual scenery. Never registers bodies or modifies simulation state. */
 export class SpaceStation {
@@ -9,14 +9,15 @@ export class SpaceStation {
   readonly atmosphere:Phaser.GameObjects.Graphics;
   readonly lights:Phaser.GameObjects.Graphics;
   readonly motion=window.matchMedia('(prefers-reduced-motion: reduce)');
-  static preload(scene:Phaser.Scene){
+  static preload(scene:Phaser.Scene,stage:StageDefinition=STAGE){
+    if(stage.art==='factory')scene.load.image('factory-background',asset('factory/background.png'));
     for(const key of ['background','platform','shuttle'])scene.load.image(`station-${key}`,asset(`station/${key}.png`));
   }
-  constructor(readonly scene:Phaser.Scene){
-    this.background=scene.add.image(500,470,'station-background').setDepth(-40);
+  constructor(readonly scene:Phaser.Scene,readonly stage:StageDefinition=STAGE){
+    this.background=scene.add.image(500,470,stage.art==='factory'?'factory-background':'station-background').setDepth(-40);
     this.atmosphere=scene.add.graphics().setDepth(-25);
     this.ships=[0,1,2].map(()=>scene.add.image(0,0,'station-shuttle').setDepth(-24).setVisible(false));
-    this.platforms=STAGE.platforms.map((p,i)=>scene.add.image(p.x,p.y,'station-platform').setOrigin(0,0).setDisplaySize(p.width,i?34:96).setDepth(-2));
+    this.platforms=this.stage.platforms.map((p,i)=>scene.add.image(p.x,p.y,'station-platform').setOrigin(0,0).setDisplaySize(p.width,i?34:96).setDepth(-2));
     this.lights=scene.add.graphics().setDepth(-1);
   }
   draw(tick:number,zoom:number,width:number,height:number,centerX=500,centerY=470){
@@ -29,7 +30,7 @@ export class SpaceStation {
     const time=this.motion.matches?0:tick/60;
     this.ships.forEach((ship,i)=>{
       const phase=(time+i*7)%24;
-      const visible=!this.motion.matches&&phase<8;
+      const visible=this.stage.art==='station'&&!this.motion.matches&&phase<8;
       ship.setVisible(visible);if(!visible)return;
       const progress=phase/8;
       const u=[.18,.83,.69][i]+(i===1?-.025:.02)*progress*progress;
@@ -43,14 +44,36 @@ export class SpaceStation {
     });
     // A single occasional comet: fixed object count, no emitter accumulation.
     const phase=(time+4)%19;
-    if(!this.motion.matches&&phase<2.4){
+    if(this.stage.art==='station'&&!this.motion.matches&&phase<2.4){
       const p=phase/2.4,x=left+size*(.1+p*.9),y=top+size*(.12+p*.3),unit=size/480;
       for(let n=0;n<15;n++){g.fillStyle(n<3?0xe0f5ec:0x75b7c9,(1-n/15)*.5);g.fillRect(Math.round(x-n*unit*3),Math.round(y-n*unit),unit*2,unit*2);}
     }
+    if(this.stage.art==='factory'){
+      // Cosmetic machinery stays behind all fighters and never creates collision bodies.
+      const pixel=size/640;
+      for(const [i,u] of [.07,.92].entries()){
+        const x=left+size*u,extension=(18+Math.sin(time*.65+i*2)*12)*pixel,y=top+size*.23;
+        g.fillStyle(0x172934,.9);g.fillRect(x-8*pixel,y,16*pixel,90*pixel+extension);
+        g.fillStyle(0x52666c,.7);g.fillRect(x-3*pixel,y,6*pixel,105*pixel+extension);
+        g.fillStyle(0x243b43,1);g.fillRect(x-17*pixel,y+100*pixel+extension,34*pixel,12*pixel);
+        g.fillStyle(0xffbe66,.6);g.fillRect(x-15*pixel,y+108*pixel+extension,30*pixel,2*pixel);
+      }
+      for(let i=0;i<22;i++){
+        const u=((i/22+time*.012)%1),x=left+u*size,y=top+size*.9;
+        g.fillStyle(i%3?0xe2aa58:0x65c7c3,.25);g.fillRect(x,y,8*pixel,2*pixel);
+      }
+      if(!this.motion.matches){
+        const cycle=time%6;
+        if(cycle<.6)for(let i=0;i<9;i++){
+          const age=(cycle+i*.05)% .6,x=left+size*.86+Math.cos(i*2.4)*age*size*.045,y=top+size*.72+age*age*size*.13;
+          g.fillStyle(i%2?0xffc86d:0x8af4e8,(1-age/.6)*.55);g.fillRect(x,y,pixel*2,pixel*2);
+        }
+      }
+    }
     this.lights.clear();
-    for(const [i,p] of STAGE.platforms.entries()){
+    for(const [i,p] of this.stage.platforms.entries()){
       // Exact collision-top cue, independent of transparent sprite decoration.
-      this.lights.fillStyle(i?0xff85c8:0x89fff0,.9);this.lights.fillRect(p.x,p.y,p.width,2);
+      this.lights.fillStyle(this.stage.art==='factory'?(i?0x91e7df:0xffd184):(i?0xff85c8:0x89fff0),.9);this.lights.fillRect(p.x,p.y,p.width,2);
       if(i===0){
         // Gold endcaps mark the exact walkable ledges, not the decorative hull.
         this.lights.fillStyle(0xffe45b,1);

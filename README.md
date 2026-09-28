@@ -79,6 +79,15 @@ node scripts/gesture-qa.mjs
 ```
 Set `QA_URL` to test a deployed URL. Append `?debug` to expose the simulation bridge used by browser tests. F3 works without that flag.
 
+## Arenas
+
+- **Rift Array**: original 680-unit battle deck with one centered floating platform.
+- **Neon Foundry**: 880-unit battle deck (29% wider), three asymmetric floating gantries, expanded blast zones, and a dark pixel-art factory with moving presses, conveyor lights and welding sparks. Scenery is cosmetic; there are no machinery hazards. Reduced-motion preferences freeze the machinery.
+
+Choose an arena in solo **CHOOSE ARENA**, or select **Arena** under multiplayer **rules**. The host's choice is shared by all players and retained for rematches; changing it resets guest readiness. Network protocol v4 prevents older single-map clients from joining a different-geometry match. Refresh all devices after updating.
+
+Geometry is data-driven through `STAGES` / `Simulation.stage`: collision, respawns, drops, AI recovery, items, camera framing and offscreen warnings use the selected arena. `tests/stages.test.ts` covers every fighter/platform, boundary and camera fixtures, and deterministic four-fighter matches at all difficulties. `scripts/factory-qa.mjs` covers both browser engines and desktop/mobile layouts. See [factory art notes](public/assets/factory/ART-NOTES.md) for the built-in generation prompt and asset provenance.
+
 ## Architecture
 - `game/data.ts`: typed fighter, move, stage, item, input and match data.
 - `game/simulation.ts`: seeded 60 Hz combat simulation, collision, AI, match scoring.

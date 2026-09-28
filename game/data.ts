@@ -28,10 +28,13 @@ export const FIGHTERS:FighterDefinition[]=[
 ];
 export const fighter=(id:FighterId)=>FIGHTERS.find(f=>f.id===id)!;
 export interface Slot { fighter:FighterId; difficulty:Difficulty; team:number; name?:string; human?:boolean }
-export interface MatchConfig { feel?:FeelMode; mode:'stock'|'timed'; stocks:number; seconds:number; teams:boolean; friendlyFire:boolean; slots:Slot[]; items:'off'|'low'|'normal'; seed:number }
-export const defaultConfig:MatchConfig={mode:'stock',stocks:3,seconds:240,teams:false,friendlyFire:false,slots:[{fighter:'kairo',difficulty:'medium',team:0},{fighter:'vexa',difficulty:'medium',team:1}],items:'low',seed:743};
-export interface StageDefinition { platforms:{x:number;y:number;width:number;oneWay:boolean}[]; blast:{left:number;right:number;top:number;bottom:number}; spawns:number[] }
-export const STAGE:StageDefinition={platforms:[{x:160,y:610,width:680,oneWay:false},{x:380,y:425,width:240,oneWay:true}],blast:{left:-180,right:1180,top:-200,bottom:1020},spawns:[330,670,450,550]};
+export type StageId='rift-array'|'neon-foundry';
+export interface MatchConfig { stage?:StageId; feel?:FeelMode; mode:'stock'|'timed'; stocks:number; seconds:number; teams:boolean; friendlyFire:boolean; slots:Slot[]; items:'off'|'low'|'normal'; seed:number }
+export const defaultConfig:MatchConfig={stage:'rift-array',mode:'stock',stocks:3,seconds:240,teams:false,friendlyFire:false,slots:[{fighter:'kairo',difficulty:'medium',team:0},{fighter:'vexa',difficulty:'medium',team:1}],items:'low',seed:743};
+export interface StageDefinition { id:StageId; name:string; subtitle:string; description:string; art:'station'|'factory'; platforms:{x:number;y:number;width:number;oneWay:boolean}[]; blast:{left:number;right:number;top:number;bottom:number}; spawns:number[] }
+export const STAGE:StageDefinition={id:'rift-array',name:'Rift Array',subtitle:'ORBITAL DOCK',description:'A moonlit orbital station. One battle deck, one floating ledge, and distant launches.',art:'station',platforms:[{x:160,y:610,width:680,oneWay:false},{x:380,y:425,width:240,oneWay:true}],blast:{left:-180,right:1180,top:-200,bottom:1020},spawns:[330,670,450,550]};
+export const STAGES:StageDefinition[]=[STAGE,{id:'neon-foundry',name:'Neon Foundry',subtitle:'DEEP-SPACE MANUFACTURING',description:'A sprawling automated factory. A wider battle deck and three staggered gantries open new routes through the machinery.',art:'factory',platforms:[{x:60,y:650,width:880,oneWay:false},{x:155,y:465,width:220,oneWay:true},{x:650,y:420,width:220,oneWay:true},{x:405,y:300,width:210,oneWay:true}],blast:{left:-280,right:1280,top:-280,bottom:1100},spawns:[230,770,390,610]}];
+export const stageDefinition=(id:StageId='rift-array')=>STAGES.find(s=>s.id===id)??STAGE;
 export type ItemKind='bomb'|'spike'|'repair';
 export interface ItemDefinition {name:string;damage:number;base:number;scaling:number;lifetime:number;color:number}
 export const ITEMS:Record<ItemKind,ItemDefinition>={bomb:{name:'Rift Bomb',damage:22,base:9,scaling:.085,lifetime:900,color:0xff58b1},spike:{name:'Gravity Spike',damage:12,base:5,scaling:.06,lifetime:900,color:0xffe45b},repair:{name:'Repair Byte',damage:-25,base:0,scaling:0,lifetime:900,color:0x27e8ed}};

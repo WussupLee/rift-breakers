@@ -1,7 +1,7 @@
 'use client';
 import {useEffect,useState} from 'react';
 import QRCode from 'qrcode';
-import {FIGHTERS,asset,type FighterId,type MatchConfig} from '@/game/data';
+import {FIGHTERS,STAGES,stageDefinition,asset,type FighterId,type MatchConfig} from '@/game/data';
 import {cleanName,inviteURL,roomCode,validRoomCode} from '@/game/network-protocol';
 import type {MultiplayerRoom,RoomState,Member} from '@/game/multiplayer';
 
@@ -39,7 +39,8 @@ export function MultiplayerLobby({room,state,initialCode,selected,onOpen,onLeave
      {isHost&&state?.config.teams&&member&&<Choice label="Player team" value={String(member.team)} onChange={v=>room.setMember(member.id,{team:Number(v)})}><option value="0">Cyan</option><option value="1">Magenta</option></Choice>}
      {isHost&&state&&state.members.length<4&&<button className="secondary-button" onClick={()=>{room.addCPU();setEditing(state.members.length);}}>+ ADD COMPUTER</button>}
     </div>}
-    {tab==='rules'&&state&&<div className="room-rules"><p className="room-note">RIFT ARRAY · {isHost?'You set the rules. Changes reset guest readiness.':'The host sets rules for everyone.'}</p>
+    {tab==='rules'&&state&&<div className="room-rules"><p className="room-note">{stageDefinition(state.config.stage).name.toUpperCase()} · {isHost?'You set the rules. Changes reset guest readiness.':'The host sets rules for everyone.'}</p>
+     <Choice label="Arena" value={state.config.stage??'rift-array'} disabled={!isHost} onChange={v=>room.setRules({stage:v as MatchConfig['stage']})}>{STAGES.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</Choice>
      <Choice label="Battle mode" value={state.config.mode} disabled={!isHost} onChange={v=>room.setRules({mode:v as MatchConfig['mode']})}><option value="stock">Stock</option><option value="timed">Timed</option></Choice>
      {state.config.mode==='stock'?<Choice label="Stock count" value={String(state.config.stocks)} disabled={!isHost} onChange={v=>room.setRules({stocks:Number(v)})}>{[1,3,5].map(v=><option key={v} value={v}>{v} stocks</option>)}</Choice>:<Choice label="Time limit" value={String(state.config.seconds)} disabled={!isHost} onChange={v=>room.setRules({seconds:Number(v)})}>{[120,240,360].map(v=><option key={v} value={v}>{v/60} minutes</option>)}</Choice>}
      <Choice label="Teams" value={state.config.teams?'teams':'ffa'} disabled={!isHost} onChange={v=>room.setRules({teams:v==='teams'})}><option value="ffa">Free-for-all</option><option value="teams">Teams</option></Choice>

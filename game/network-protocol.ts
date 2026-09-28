@@ -2,12 +2,12 @@ import {z} from 'zod';
 import {emptyInput,type InputFrame,type MatchConfig,type MoveId,fighter} from './data';
 import type {Simulation,Actor,CombatEvent,Projectile,Item} from './simulation';
 
-export const NETWORK_VERSION=3;
+export const NETWORK_VERSION=4;
 export const fighterSchema=z.enum(['kairo','regent','vexa','omen']);
 export const difficultySchema=z.enum(['easy','medium','hard']);
 const finite=z.number().finite().min(-1e6).max(1e6);
 export const inputSchema=z.object({x:z.number().int().min(-1).max(1),y:z.number().int().min(-1).max(1),jump:z.boolean(),light:z.boolean(),heavy:z.boolean(),dodge:z.boolean(),item:z.boolean()});
-export const configSchema=z.object({feel:z.enum(['classic','relaxed']),mode:z.enum(['stock','timed']),stocks:z.number().int().min(1).max(5),seconds:z.number().int().min(60).max(360),teams:z.boolean(),friendlyFire:z.boolean(),items:z.enum(['off','low','normal']),seed:z.number().int().min(0).max(0xffffffff),slots:z.array(z.object({fighter:fighterSchema,difficulty:difficultySchema,team:z.number().int().min(0).max(1),name:z.string().max(16),human:z.boolean()})).min(1).max(4)});
+export const configSchema=z.object({stage:z.enum(['rift-array','neon-foundry']).default('rift-array'),feel:z.enum(['classic','relaxed']),mode:z.enum(['stock','timed']),stocks:z.number().int().min(1).max(5),seconds:z.number().int().min(60).max(360),teams:z.boolean(),friendlyFire:z.boolean(),items:z.enum(['off','low','normal']),seed:z.number().int().min(0).max(0xffffffff),slots:z.array(z.object({fighter:fighterSchema,difficulty:difficultySchema,team:z.number().int().min(0).max(1),name:z.string().max(16),human:z.boolean()})).min(1).max(4)});
 export function cleanName(value:string){let result='';for(const char of value.normalize('NFKC').replace(/[\p{Cc}\p{Cf}]/gu,'').trim().replace(/\s+/g,' ')){if(result.length+char.length>16)break;result+=char;}return result||'Rift player';}
 export function roomCode(value:string){return value.toUpperCase().replace(/[\s-]/g,'');}
 export const validRoomCode=(value:string)=>/^[A-Z2-9]{12}$/.test(value);

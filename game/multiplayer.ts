@@ -32,7 +32,7 @@ export class MultiplayerRoom{
  onChange:(state:RoomState)=>void=()=>{};onStart:(config:MatchConfig,index:number)=>void=()=>{};
  private disposed=false;private initialized=false;private timer:ReturnType<typeof setInterval>|null=null;private deadline=0;private seen=new Map<string,number>();private loaded=new Set<string>();private lastPublish=0;private lastTick=-1;private events:CombatEvent[]=[];private sequence=0;private lastInput='';private lastInputAt=0;private frame:unknown=null;
  constructor(host:boolean,name:string,fighter:FighterId,code=host?createRoomCode():''){
-  this.isHost=host;this.state={code,phase:'connecting',members:[],notice:'Connecting to the room service…',config:{...structuredClone(defaultConfig),feel:'relaxed',slots:[]}};
+  this.isHost=host;this.state={code,phase:'connecting',members:[],notice:'Connecting to the room service…',config:{...structuredClone(defaultConfig),stage:'rift-array',feel:'relaxed',slots:[]}};
   this.profile={name:cleanName(name),fighter};
  }
  private profile:{name:string;fighter:FighterId};

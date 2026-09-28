@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import {STAGE,fighter} from './data';
+import {STAGE,type StageDefinition,fighter} from './data';
 import {worldToScreen,type CameraState} from './camera';
 import {fighterWarnings,WARNING_WIDTH,type WarningActor,type FighterWarning} from './danger';
 
@@ -20,11 +20,11 @@ export class BoundaryOverlay{
    this.masks.forEach(m=>m.destroy());this.maskGraphics.forEach(g=>g.destroy());
   });
  }
- draw(actors:WarningActor[],local:number,c:CameraState,width:number,height:number,hud:number,sprites:Phaser.GameObjects.Sprite[]){
+ draw(actors:WarningActor[],local:number,c:CameraState,width:number,height:number,hud:number,sprites:Phaser.GameObjects.Sprite[],stage:StageDefinition=STAGE){
   const originX=c.x-width/(2*c.zoom),originY=c.y-height/(2*c.zoom),g=this.graphics;
   g.clear().setPosition(originX,originY).setScale(1/c.zoom);
   this.previews.forEach(p=>p.setVisible(false));
-  const b=STAGE.blast,tl=worldToScreen(b.left,b.top,c,width,height),br=worldToScreen(b.right,b.bottom,c,width,height);
+  const b=stage.blast,tl=worldToScreen(b.left,b.top,c,width,height),br=worldToScreen(b.right,b.bottom,c,width,height);
   // Keep the actual elimination boundary, but without captions or prominent shading.
   g.fillStyle(0x230c12,.12);
   if(tl.x>0)g.fillRect(0,hud,Math.min(tl.x,width),height-hud);
@@ -36,7 +36,7 @@ export class BoundaryOverlay{
    for(let y=hud;y<height;y+=16)g.lineBetween(x,y,x,Math.min(height,y+5));
   for(const y of [tl.y,br.y])if(y>=hud+2&&y<=height-2)
    for(let x=0;x<width;x+=16)g.lineBetween(x,y,Math.min(width,x+5),y);
-  this.warnings=fighterWarnings(actors,local,c,width,height,hud);
+  this.warnings=fighterWarnings(actors,local,c,width,height,hud,stage);
   for(const w of this.warnings){
    const source=sprites[w.id],a=actors.find(a=>a.id===w.id);if(!source||!a)continue;
    const color=Phaser.Display.Color.HexStringToColor(w.color).color,r=WARNING_WIDTH/2;

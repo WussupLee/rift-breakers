@@ -1,25 +1,26 @@
-import {STAGE} from './data';
+import {STAGE,type StageDefinition} from './data';
 export interface CameraState{x:number;y:number;zoom:number}
 interface TrackedFighter{x:number;y:number;vx:number;vy:number;out:boolean;respawn:number}
 export const clamp=(v:number,min:number,max:number)=>Math.max(min,Math.min(max,v));
 export const cameraHud=(width:number,height:number)=>Math.min(width<=900?142:92,height*.58);
 
 /** Keep the deck at one screen-space anchor. Fighters never drag the view into a blast zone. */
-export function anchorCamera(zoom:number,width:number,height:number,hud=cameraHud(width,height)):CameraState{
- const deck=STAGE.platforms[0],deckY=hud+Math.max(1,height-hud-20)*.58;
+export function anchorCamera(zoom:number,width:number,height:number,hud=cameraHud(width,height),stage:StageDefinition=STAGE):CameraState{
+ const deck=stage.platforms[0],deckY=hud+Math.max(1,height-hud-20)*.58;
  return {x:deck.x+deck.width/2,y:deck.y-(deckY-height/2)/zoom,zoom};
 }
-export function frameFighters(actors:TrackedFighter[],width:number,height:number,hud=cameraHud(width,height)):CameraState{
- const deck=STAGE.platforms[0];
- const normal=Math.max(.01,Math.min(Math.max(1,width-48)/(deck.width+120),Math.max(1,height-hud-20)/460));
+export function frameFighters(actors:TrackedFighter[],width:number,height:number,hud=cameraHud(width,height),stage:StageDefinition=STAGE):CameraState{
+ const deck=stage.platforms[0];
+ const top=Math.min(...stage.platforms.map(p=>p.y)),vertical=Math.max(460,(deck.y-top+75)/.58);
+ const normal=Math.max(.01,Math.min(Math.max(1,width-48)/(deck.width+120),Math.max(1,height-hud-20)/vertical));
  let pressure=0;
  for(const a of actors){
   if(a.out||a.respawn)continue;
   const x=a.x+clamp(a.vx*4,-60,60),y=a.y+clamp(a.vy*4,-60,60);
-  pressure=Math.max(pressure,(deck.x-x)/240,(x-deck.x-deck.width)/240,(250-y)/240,(y-740)/240);
+  pressure=Math.max(pressure,(deck.x-x)/240,(x-deck.x-deck.width)/240,(top-175-y)/240,(y-deck.y-130)/240);
  }
  // Retain a little dynamic zoom, but never shrink the arena endlessly to chase a KO.
- return anchorCamera(normal*(1-.16*clamp(pressure,0,1)),width,height,hud);
+ return anchorCamera(normal*(1-.16*clamp(pressure,0,1)),width,height,hud,stage);
 }
 export function easeCamera(current:CameraState,target:CameraState,delta:number):CameraState{
  if(current.zoom<=0)return target;

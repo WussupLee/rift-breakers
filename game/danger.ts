@@ -1,4 +1,4 @@
-import {STAGE,fighter,type FighterId} from './data';
+import {STAGE,type StageDefinition,fighter,type FighterId} from './data';
 import {clamp,worldToScreen,type CameraState} from './camera';
 
 export interface WarningActor{
@@ -11,13 +11,13 @@ export interface FighterWarning{
 }
 export const WARNING_WIDTH=34,WARNING_HEIGHT=34;
 /** Uses the same foot/origin position and exact blast limits as Simulation. */
-export function nearBlast(a:Pick<WarningActor,'x'|'y'|'vx'|'vy'>){
- const b=STAGE.blast;
+export function nearBlast(a:Pick<WarningActor,'x'|'y'|'vx'|'vy'>,stage:StageDefinition=STAGE){
+ const b=stage.blast;
  return Math.min(a.x-b.left,b.right-a.x,a.y-b.top,b.bottom-a.y)<150||
   Math.min(a.x+Math.min(0,a.vx)*10-b.left,b.right-a.x-Math.max(0,a.vx)*10,
    a.y+Math.min(0,a.vy)*10-b.top,b.bottom-a.y-Math.max(0,a.vy)*10)<70;
 }
-export function fighterWarnings(actors:WarningActor[],localIndex:number,camera:CameraState,width:number,height:number,hud:number):FighterWarning[]{
+export function fighterWarnings(actors:WarningActor[],localIndex:number,camera:CameraState,width:number,height:number,hud:number,stage:StageDefinition=STAGE):FighterWarning[]{
  const halfW=WARNING_WIDTH/2,halfH=WARNING_HEIGHT/2;
  const left=halfW+8,right=Math.max(left,width-halfW-8),top=Math.min(height-halfH-8,hud+halfH+6),bottom=Math.max(top,height-halfH-8);
  const placed:FighterWarning[]=[];
@@ -26,7 +26,7 @@ export function fighterWarnings(actors:WarningActor[],localIndex:number,camera:C
   if(a.out||a.respawn)continue;
   const def=fighter(a.slot.fighter),point=worldToScreen(a.x,a.y-def.height/2,camera,width,height);
   const offscreen=point.x<12||point.x>width-12||point.y<hud||point.y>height-12;
-  const local=a.id===localIndex,danger=nearBlast(a);
+  const local=a.id===localIndex,danger=nearBlast(a,stage);
   if(!offscreen&&!danger)continue;
   const x=clamp(point.x,left,right),y=clamp(point.y-(offscreen?0:36),top,bottom);
   const w:FighterWarning={id:a.id,x,y,offscreen,danger,local,

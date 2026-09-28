@@ -22,3 +22,7 @@ for(const s of [...audio.samples,audio.music]){
 }
 assert(fs.existsSync('public/assets/audio/SOUND-DESIGN.md'));
 console.log('Validated recorded audio hashes, measured levels, source records and music provenance.');
+
+const factoryBytes=fs.readFileSync('public/assets/factory/background.png'),factory=PNG.sync.read(factoryBytes);
+assert.equal(factory.width,640);assert.equal(factory.height,640);assert(factoryBytes.length<1024*1024);assert(fs.existsSync('public/assets/factory/ART-NOTES.md'));
+console.log('Validated Neon Foundry background, texture budget and provenance.');
