@@ -84,7 +84,7 @@ test('charged beams and left-facing stationary traps retain charge and facing',(
 });
 test('network v3 preserves followup moves, queued branch and charged projectile metadata',()=>{
  const s=setup('omen'),a=s.actors[0];s.startMove(a,'l2',emptyInput());a.chainQueued='sh';a.charge=23;s.spawnProjectile(a,fighter('omen').moves.sh);
- const state=snapshotSchema.parse(captureSnapshot(s,[],false)),guest=setup('omen');assert.equal(NETWORK_VERSION,4);assert(applySnapshot(guest,state));
+ const state=snapshotSchema.parse(captureSnapshot(s,[],false)),guest=setup('omen');assert.equal(NETWORK_VERSION,5);assert(applySnapshot(guest,state));
  assert.equal(guest.actors[0].move,fighter('omen').moves.l2);assert.equal(guest.actors[0].chainQueued,'sh');assert.equal(guest.projectiles[0].charge,23);
 });
 for(const feel of ['classic','relaxed'] as const)for(const source of FIGHTERS)for(const target of FIGHTERS)for(const face of [-1,1])

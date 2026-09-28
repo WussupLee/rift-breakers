@@ -16,7 +16,8 @@ for(const [name,engine] of Object.entries({chromium,webkit})){
   await page.waitForFunction(()=>window.rift?.simulation.tick>185);
   const fixture=async(x,y)=>page.evaluate(({x,y})=>{
    const s=window.rift.simulation;s.ended=true;
-   s.actors.forEach((a,i)=>Object.assign(a,{x:i?670:x,px:i?670:x,y:i?610:y,py:i?610:y,vx:0,vy:0,grounded:i?true:y===610,stun:0,move:null,out:false,respawn:0,invulnerable:0,dodgeTime:0,damage:0}));
+   s.actors.forEach((a,i)=>Object.assign(a,{x:i?670:x,px:i?670:x,y:i?610:y,py:i?610:y,vx:0,vy:0,grounded:i?true:y===610,stun:0,freeze:0,landing:0,wall:0,move:null,out:false,respawn:0,invulnerable:0,dodgeTime:0,damage:0}));
+   window.rift.scene.motion.tracks.clear();
   },{x,y});
   const state=()=>page.evaluate(()=>{
    const scene=window.rift.scene,c=scene.cameraState,w=scene.scale.width,h=scene.scale.height;
@@ -46,10 +47,13 @@ for(const [name,engine] of Object.entries({chromium,webkit})){
    await page.waitForTimeout(100);assert(!(await state()).warnings.some(w=>w.local));
   }
   await page.setViewportSize({width:320,height:480});
-  await page.evaluate(()=>{const {simulation:s,bridge}=window.rift;bridge.localIndex=2;s.actors.forEach(a=>{Object.assign(a,{x:-150,px:-150,y:985,py:985,vy:-9,face:a.id%2?-1:1,grounded:false,respawn:0});a.slot.fighter=['kairo','regent','vexa','omen'][a.id];a.slot.name='WWWWWWWWWW';});});
+  await page.evaluate(()=>{const {simulation:s,bridge,scene}=window.rift;bridge.localIndex=2;scene.motion.tracks.clear();s.actors.forEach(a=>{Object.assign(a,{x:-150,px:-150,y:985,py:985,vy:-9,face:a.id%2?-1:1,grounded:false,respawn:0,wall:0,landing:0});a.slot.fighter=['kairo','regent','vexa','omen'][a.id];a.slot.name='WWWWWWWWWW';});});
   await page.waitForTimeout(700);const crowded=await state();assert.equal(crowded.warnings.length,4);assert.equal(crowded.warnings[0].id,2);
   for(const w of crowded.warnings)for(const q of crowded.warnings)if(w.id!==q.id)assert(Math.abs(w.x-q.x)>=38||Math.abs(w.y-q.y)>=38);
   assert.equal(crowded.previews.length,4);assert(crowded.previews.every(p=>p.masked&&p.texture===p.source&&p.texture.endsWith('-jump')&&p.flip===(p.id%2===1)));await page.screenshot({path:'work/qa/camera/'+name+'-four-fighter-corner.png'});
+  // Tumble pivots must remain centered inside the circular preview.
+  await page.evaluate(()=>{const {scene,simulation:s}=window.rift;s.actors.forEach(a=>Object.assign(a,{vx:18,vy:0,stun:30,grounded:false,freeze:0}));scene.motion.tracks.clear();scene.renderWorld(1,1);});
+  assert(await page.evaluate(()=>{const scene=window.rift.scene,c=scene.cameraState;return scene.boundaries.warnings.every(w=>{const p=scene.boundaries.previews[w.id];return Math.abs((p.x-c.x)*c.zoom+scene.scale.width/2-w.x)<.01&&Math.abs((p.y-c.y)*c.zoom+scene.scale.height/2-w.y)<.01;});}));
   // Restart also exercises explicit mask cleanup, on both rendering engines.
   await page.getByRole('button',{name:'Pause match',exact:true}).click();
   await page.getByRole('button',{name:'Restart match',exact:true}).click();

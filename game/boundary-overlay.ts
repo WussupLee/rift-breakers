@@ -53,7 +53,8 @@ export class BoundaryOverlay{
    const fit=24/fighter(a.slot.fighter).height;
    this.previews[w.id].setTexture(source.texture.key,source.frame.name)
     .setOrigin(source.originX,source.originY).setFlipX(source.flipX).setAngle(source.angle)
-    .setPosition(originX+w.x/c.zoom,originY+(w.y+12)/c.zoom)
+    .setPosition(originX+(w.x+(source.x-a.x)*fit)/c.zoom,
+     originY+(w.y+(source.y-(a.y-fighter(a.slot.fighter).height/2))*fit)/c.zoom)
     .setScale(source.scaleX*fit/c.zoom,source.scaleY*fit/c.zoom)
     .setAlpha(.92).setVisible(true);
   }

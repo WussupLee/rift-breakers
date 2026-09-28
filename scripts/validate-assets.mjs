@@ -26,3 +26,11 @@ console.log('Validated recorded audio hashes, measured levels, source records an
 const factoryBytes=fs.readFileSync('public/assets/factory/background.png'),factory=PNG.sync.read(factoryBytes);
 assert.equal(factory.width,640);assert.equal(factory.height,640);assert(factoryBytes.length<1024*1024);assert(fs.existsSync('public/assets/factory/ART-NOTES.md'));
 console.log('Validated Neon Foundry background, texture budget and provenance.');
+
+assert(fs.existsSync('public/assets/fighters/ANIMATION-NOTES.md'),'Supplementary art provenance and generation prompts are required');
+for(const id of ['kairo','regent','vexa','omen']){
+ const meta=JSON.parse(fs.readFileSync(`public/assets/fighters/${id}/motion.json`,'utf8')),bytes=fs.readFileSync(`public/assets/fighters/${id}/motion.png`),png=PNG.sync.read(bytes);
+ assert.equal(meta.frames,32);assert.equal(meta.width,256);assert.equal(meta.height,256);assert.equal(png.width,2048);assert.equal(png.height,1024);assert(bytes.length<1024*1024);
+ const hashes=new Set();for(let frame=0;frame<32;frame++){let visible=0;const pixels=[];for(let y=0;y<256;y++)for(let x=0;x<256;x++){const i=((Math.floor(frame/8)*256+y)*png.width+frame%8*256+x)*4;pixels.push(...png.data.subarray(i,i+4));if(png.data[i+3]>32){visible++;assert(x>0&&x<255&&y>0&&y<255,'Packed sprite clipped');}}assert(visible>60);hashes.add(createHash('sha256').update(Buffer.from(pixels)).digest('hex'));assert.equal(meta.pivots[frame].x,128);assert.equal(meta.pivots[frame].y,208);}assert.equal(hashes.size,32,'Every supplementary pose must be distinct');
+}
+console.log('Validated 128 supplementary poses: unique pixels, complete cells, transparent padding, pivots and texture budgets.');

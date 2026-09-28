@@ -43,6 +43,14 @@ try{
  await host.evaluate(()=>{const {simulation:s,bridge,scene}=window.rift,a=s.actors[0],b=s.actors[1];bridge.paused=true;s.events=[];s.stepActor(a,{x:0,y:0,jump:false,light:true,heavy:false,dodge:false,item:false});a.moveTick=a.move.startup;a.face=1;a.x=b.x-a.move.hitbox.x;a.y=b.y;s.resolveAttack(a);s.events.forEach(e=>scene.effect(e));bridge.network.lastPublish=0;bridge.network.publish(s,s.events,true);a.move=null;});
  for(const p of [host,p2,p3,p4]){await p.waitForFunction(()=>window.rift.evadesSeen===1);assert.equal(await p.evaluate(()=>window.rift.simulation.actors[1].damage),0);assert(await p.evaluate(()=>window.rift.simulation.actors[1].dodgeTime>0));}
  await host.evaluate(()=>{window.rift.bridge.paused=false;});
+ // New directional strike poses and hard-hit reactions use authoritative snapshots on every client.
+ await host.evaluate(()=>{const {simulation:s,bridge}=window.rift;bridge.paused=true;s.tick++;s.actors.forEach(a=>Object.assign(a,{stun:0,freeze:0,dodgeTime:0,move:null,respawn:0,out:false,landing:0,wall:0}));const a=s.actors[1];a.grounded=false;s.startMove(a,'sa',{x:1,y:0,jump:false,light:false,heavy:false,dodge:false,item:false});a.moveTick=a.move.startup;bridge.network.lastPublish=0;bridge.network.publish(s,[],true);});
+ for(const p of [host,p2,p3,p4])await p.waitForFunction(()=>window.rift.scene.poses[1]?.state==='attack:sa'&&window.rift.scene.poses[1]?.phase==='active'&&window.rift.scene.sprites[1].texture.key.endsWith('-motion'));
+ await host.evaluate(()=>{const {simulation:s,scene,bridge}=window.rift,a=s.actors[1];Object.assign(a,{move:null,grounded:false,stun:40,freeze:0,vx:16,vy:-3});s.tick++;const e={kind:'hit',actor:1,x:a.x,y:a.y,power:16,color:'#ffffff'};scene.effect(e);bridge.network.lastPublish=0;bridge.network.publish(s,[e],true);});
+ for(const p of [host,p2,p3,p4])await p.waitForFunction(()=>window.rift.scene.poses[1]?.state==='launch');
+ await host.evaluate(()=>{const {simulation:s,bridge}=window.rift;s.tick+=12;bridge.network.lastPublish=0;bridge.network.publish(s,[],true);});
+ for(const p of [host,p2,p3,p4])await p.waitForFunction(()=>window.rift.scene.poses[1]?.state==='tumble'&&window.rift.scene.poses[1]?.center);
+ await host.evaluate(()=>{const {simulation:s,bridge}=window.rift;s.actors.forEach(a=>Object.assign(a,{stun:0,freeze:0,vx:0,vy:0}));bridge.paused=false;});
  await p4.close();await host.waitForFunction(()=>window.rift.bridge.network.state.members[3].cpu,{},{timeout:15000});
  // End authoritatively; all remaining clients must agree on winners and results.
  await host.evaluate(()=>{const s=window.rift.simulation;for(const a of s.actors.slice(1)){a.stocks=1;a.x=1300;a.invulnerable=0;}});

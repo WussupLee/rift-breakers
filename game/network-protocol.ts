@@ -2,7 +2,7 @@ import {z} from 'zod';
 import {emptyInput,type InputFrame,type MatchConfig,type MoveId,fighter} from './data';
 import type {Simulation,Actor,CombatEvent,Projectile,Item} from './simulation';
 
-export const NETWORK_VERSION=4;
+export const NETWORK_VERSION=5;
 export const fighterSchema=z.enum(['kairo','regent','vexa','omen']);
 export const difficultySchema=z.enum(['easy','medium','hard']);
 const finite=z.number().finite().min(-1e6).max(1e6);
@@ -26,7 +26,7 @@ export class InputMailbox{
 }
 
 const moveSchema=z.enum(['nl','sl','dl','nh','sh','dh','na','sa','da','rec','gp','l2','l3']);
-const actorSchema=z.object({id:z.number().int().min(0).max(3),x:finite,y:finite,vx:finite,vy:finite,face:finite,damage:finite,stocks:finite,score:finite,kos:finite,deaths:finite,out:z.boolean(),airJumps:finite,recoveryUsed:z.boolean(),held:finite.nullable(),damageDone:finite,respawn:finite,stun:finite,freeze:finite,grounded:z.boolean(),platform:finite,dodgeTime:finite,dodgeAge:finite,invulnerable:finite,landing:finite,charge:finite,drop:finite.optional().default(0),moveTick:finite,dodgeCD:finite,chainQueued:moveSchema.nullable(),move:moveSchema.nullable()});
+const actorSchema=z.object({id:z.number().int().min(0).max(3),x:finite,y:finite,vx:finite,vy:finite,face:finite,damage:finite,stocks:finite,score:finite,kos:finite,deaths:finite,out:z.boolean(),airJumps:finite,recoveryUsed:z.boolean(),held:finite.nullable(),damageDone:finite,respawn:finite,stun:finite,freeze:finite,grounded:z.boolean(),platform:finite,wall:finite.optional().default(0),intent:inputSchema.pick({x:true,y:true}).optional(),spot:z.boolean().optional().default(false),dodgeTime:finite,dodgeAge:finite,invulnerable:finite,landing:finite,charge:finite,drop:finite.optional().default(0),moveTick:finite,dodgeCD:finite,chainQueued:moveSchema.nullable(),move:moveSchema.nullable()});
 const projectileSchema=z.object({id:finite,owner:z.number().int().min(0).max(3),kind:z.string().max(16),x:finite,y:finite,px:finite,py:finite,vx:finite,vy:finite,radius:finite,life:finite,arm:finite,damage:finite,base:finite,scaling:finite,angle:finite,gravity:finite,face:finite,charge:finite,move:moveSchema});
 const itemSchema=z.object({id:finite,kind:z.enum(['bomb','spike','repair']),x:finite,y:finite,px:finite,py:finite,vx:finite,vy:finite,life:finite,fuse:finite,owner:finite,heldBy:finite,armed:z.boolean(),grace:finite});
 const eventSchema=z.object({kind:z.enum(['hit','ko','jump','dodge','land','attack','respawn','item','sudden','evade']),x:finite,y:finite,color:z.string().regex(/^#[\da-f]{6}$/i),power:finite,actor:z.number().int().min(0).max(3),move:moveSchema.optional(),cue:z.enum(['dash','throw','pickup','repair','explosion']).optional()});
@@ -34,11 +34,11 @@ export const snapshotSchema=z.object({tick:z.number().int().nonnegative(),countd
 export type NetSnapshot=z.infer<typeof snapshotSchema>;
 export function captureSnapshot(sim:Simulation,events:CombatEvent[],paused:boolean):NetSnapshot{
  return {tick:sim.tick,countdown:sim.countdown,time:sim.time,sudden:sim.sudden,ended:sim.ended,winners:[...sim.winners],paused,
-  actors:sim.actors.map(a=>actorSchema.parse({...a,move:a.move?.id??null})),projectiles:sim.projectiles.map(p=>projectileSchema.parse(p)),items:sim.items.map(i=>({...i})),events:events.slice(-128)};
+  actors:sim.actors.map(a=>actorSchema.parse({...a,intent:{x:a.previous.x,y:a.previous.y},move:a.move?.id??null})),projectiles:sim.projectiles.map(p=>projectileSchema.parse(p)),items:sim.items.map(i=>({...i})),events:events.slice(-128)};
 }
 export function applySnapshot(sim:Simulation,state:NetSnapshot){
  if(state.actors.length!==sim.actors.length||state.actors.some((a,i)=>a.id!==i)||state.projectiles.some(p=>p.owner>=sim.actors.length)||state.events.some(e=>e.actor>=sim.actors.length))return false;
  sim.tick=state.tick;sim.countdown=state.countdown;sim.time=state.time;sim.sudden=state.sudden;sim.ended=state.ended;sim.winners=[...state.winners];
- state.actors.forEach((a,i)=>{const target=sim.actors[i],px=target.x,py=target.y;Object.assign(target,a,{px,py,move:a.move?fighter(target.slot.fighter).moves[a.move as MoveId]:null});});
+ state.actors.forEach((a,i)=>{const target=sim.actors[i],px=target.x,py=target.y;Object.assign(target,a,{px,py,previous:{...target.previous,...a.intent},move:a.move?fighter(target.slot.fighter).moves[a.move as MoveId]:null});});
  sim.projectiles=state.projectiles.map(p=>({...p,hit:new Set<number>()})) as Projectile[];sim.items=state.items.map(i=>({...i})) as Item[];return true;
 }

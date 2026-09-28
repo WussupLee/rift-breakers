@@ -3,7 +3,7 @@ A browser platform fighter with local CPU play and QR-invite multiplayer built w
 
 **Play:** https://wussuplee.github.io/rift-breakers/
 
-Four CC0 pixel fighters, one floating arena, and a CMYK interdimensional handheld interface. Mobile portrait uses a square arena above a multitouch D-pad and action buttons; desktop uses keyboard controls. No player account or app installation. Solo play is local; optional multiplayer uses PeerJS Cloud signaling and browser-to-browser WebRTC data channels.
+Four fighters based on CC0 pixel packs with supplementary generated poses, two arenas, and a CMYK interdimensional handheld interface. Mobile portrait uses a square arena above a multitouch D-pad and action buttons; desktop uses keyboard controls. No player account or app installation. Solo play is local; optional multiplayer uses PeerJS Cloud signaling and browser-to-browser WebRTC data channels.
 
 ## Play
 - A/D or left/right: move. W, Space or up: jump.
@@ -22,7 +22,7 @@ Y / L grants **16 protected simulation frames** to every fighter: standing, movi
 
 A translucent white fighter, steady white halo and shrinking cyan arc show the actual protected window; optional white flashes respect the reduced-flashes setting. `EVADED` appears only when a hostile hitbox actually intersects during protection, once per dodge. Mobile Y displays READY / SAFE / cooldown seconds / BUSY. Ground cooldown remains 45 ticks; air cooldown remains 130 ticks (landing caps the remainder at 45). Holding dodge does not repeat it. Attack recovery and hitstun cannot be canceled into a dodge; late taps can use the existing input buffer. A gravity-cancel attack ends protection immediately, and lingering attacks can hit after protection expires. Dodging does not protect against falling outside the blast zones.
 
-Multiplayer protocol 3 carries confirmed evades; everyone should refresh before joining a room. Tests exercise all four fighters and dodge directions, every one of the 52 attacks facing both ways against each defender, thrown items/blasts, exact expiry, cooldowns and touch/visual feedback.
+Multiplayer protocol 5 carries confirmed evades and animation intent; everyone should refresh before joining a room. Tests exercise all four fighters and dodge directions, every one of the 52 attacks facing both ways against each defender, thrown items/blasts, exact expiry, cooldowns and touch/visual feedback.
 
 ### Camera and recovery cues
 
@@ -47,7 +47,7 @@ On the ground, tap **B → B → B** (keyboard **J → J → J**) for three diff
 
 The CHAIN readout shows sequence position, not a claimed combo hit count, and confirms LIGHT / HEAVY QUEUED. CPU difficulty changes its choice/reaction frequency, not legal timing. Lunges and vaults now begin on activation, not during startup. Omen's projectile charge, original facing and move identity survive travel and network replication. Attack effects follow the authored reach; existing CC0 sprites and recorded audio are reused.
 
-`tests/combos.test.ts` covers all fighter matchups, both facings and both feel profiles; touch and network scripts cover actual button taps and a guest chain replicated to all four clients. Everyone must refresh for protocol 3 before joining a room.
+`tests/combos.test.ts` covers all fighter matchups, both facings and both feel profiles; touch and network scripts cover actual button taps and a guest chain replicated to all four clients. Everyone must refresh for protocol 5 before joining a room.
 
 ## Roster
 | Fighter | Archetype | Art |
@@ -57,7 +57,13 @@ The CHAIN readout shows sequence position, not a claimed combo hit count, and co
 | Vexa Thorn | Fast polearm rushdown | Huntress |
 | Omen Null | Projectile/trap zoner | Evil Wizard 2 |
 
-Character art is by LuizMelo, CC0. Sound and planetary art by Kenney, CC0. Source URLs and unmodified license records are in [the asset register](public/assets/SOURCES.md). Original sprite colors are preserved; attack animations are retimed across directional families, 52 authored moves reuse the nine provided animation states per fighter.
+Original character packs are by LuizMelo, CC0. Sound and planetary art by Kenney, CC0. Source URLs and unmodified license records are in [the asset register](public/assets/SOURCES.md). Original files are preserved. Supplementary AI-generated key poses are separately credited.
+
+### Expressive animation expansion
+
+Each fighter has 32 new key poses: 13 distinct attack windup/strike pairs and six movement/reaction poses. The presentation director combines these with original cycles into 40 named states per fighter, including braking, turning, apex, landing rebound, dodge and directional launch/tumble. Hard-hit victims fly sideways and rotate around their body center, with per-character weight cues and bounded afterimages. Reduced-motion keeps essential poses without spins or squash. No animation transition delays legal input or bypasses attack timing.
+
+All 52 attack presentations have distinct pose pairs. Aerial moves now differ in timing, reach and movement, including Omen's horizontal bolt and downward shard. This is a hybrid key-pose/procedural system, not 40 hand-drawn clips. See [research, coverage, limitations and exact generation prompts](public/assets/fighters/ANIMATION-NOTES.md). Tests: `tests/animation.test.ts`, `scripts/animation-qa.mjs`, plus asset validation. Multiplayer protocol **v5** requires every device to refresh before joining.
 
 ## Development
 Node 24 and pnpm 11.25.0:
@@ -84,7 +90,7 @@ Set `QA_URL` to test a deployed URL. Append `?debug` to expose the simulation br
 - **Rift Array**: original 680-unit battle deck with one centered floating platform.
 - **Neon Foundry**: 880-unit battle deck (29% wider), three asymmetric floating gantries, expanded blast zones, and a dark pixel-art factory with moving presses, conveyor lights and welding sparks. Scenery is cosmetic; there are no machinery hazards. Reduced-motion preferences freeze the machinery.
 
-Choose an arena in solo **CHOOSE ARENA**, or select **Arena** under multiplayer **rules**. The host's choice is shared by all players and retained for rematches; changing it resets guest readiness. Network protocol v4 prevents older single-map clients from joining a different-geometry match. Refresh all devices after updating.
+Choose an arena in solo **CHOOSE ARENA**, or select **Arena** under multiplayer **rules**. The host's choice is shared by all players and retained for rematches; changing it resets guest readiness. Network protocol v5 prevents older clients with different move data or stage geometry from joining. Refresh all devices after updating.
 
 Geometry is data-driven through `STAGES` / `Simulation.stage`: collision, respawns, drops, AI recovery, items, camera framing and offscreen warnings use the selected arena. `tests/stages.test.ts` covers every fighter/platform, boundary and camera fixtures, and deterministic four-fighter matches at all difficulties. `scripts/factory-qa.mjs` covers both browser engines and desktop/mobile layouts. See [factory art notes](public/assets/factory/ART-NOTES.md) for the built-in generation prompt and asset provenance.
 
@@ -102,7 +108,7 @@ This is a playable first release, not a claim of tournament-level balance or fla
 
 Automated coverage includes the 52 moves facing both ways, startup/one-hit enforcement, capsule sweeps, input buffering, jumps/coyote/drop-through, dodge/recovery, DI limits, damage, team filtering, sudden death, items and seeded AI soaks. Browser automation covers desktop setup/combat/pause/results/rematch and portrait multitouch across HUD rerenders.
 
-Physical iPhone/Android touch feel, Safari/Firefox on real devices, accessibility with assistive technology, exhaustive visual frame-by-frame hitbox QA, long-session memory profiling, and competitive balance remain release-testing work. Attack arcs are gameplay geometry, not per-pixel collisions; some move names describe intended fighting identity rather than unique multi-hit combos. Animation-state transforms and reused attack families are intentional first-release simplifications.
+Physical iPhone/Android touch feel, Safari/Firefox on real devices, accessibility with assistive technology, exhaustive visual frame-by-frame hitbox QA, long-session memory profiling, and competitive balance remain release-testing work. Attack arcs are gameplay geometry, not per-pixel collisions. New key poses have some stylistic variation; full hand-drawn in-between sequences and independent cloth animation are not claimed.
 
 The project was scaffolded with the Sites portable Vinext starter; publishing uses GitHub Pages as requested. Unused starter components do not add a backend to the game.
 
